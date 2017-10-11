@@ -12,6 +12,18 @@
 -export([bind_q/2, unbind_q/2]).
 -export([declare_exchanges/0]).
 
+-export([definitions/0]).
+-export([special_notifications/0]).
+-export([definition_type/1
+        ,definition_friendly_name/1
+        ,definition_build_function/1
+        ,definition_validate_function/1
+        ,definition_publish_function/1
+        ,definition_binding/1
+        ,definition_restrict_to/1
+        ,definition_headers/1
+        ]).
+
 -export([voicemail_new/1, voicemail_new_v/1
         ,voicemail_full/1, voicemail_full_v/1
         ,voicemail_saved/1, voicemail_saved_v/1
@@ -100,7 +112,7 @@
                                   ,<<"Account-ID">>, <<"Account-DB">>
                                   ,<<"Preview">>, <<"Attachment-URL">>
                                   ]).
-
+ 
 -define(NOTIFY_VOICEMAIL_SAVED, <<"notifications.voicemail.saved">>).
 -define(NOTIFY_VOICEMAIL_NEW, <<"notifications.voicemail.new">>).
 -define(NOTIFY_VOICEMAIL_FULL, <<"notifications.voicemail.full">>).
@@ -584,6 +596,363 @@
                      ]).
 -define(SKEL_TYPES, []).
 
+-type definition() :: {ne_binary()
+                      ,ne_binary()
+                      ,fun((api_terms()) -> api_formatter_return())
+                      ,fun((api_terms()) -> boolean())
+                      ,fun((api_terms()) -> 'ok')
+                      ,atom()
+                      ,kz_proplist()
+                      }.
+-type definitions() :: [definition()].
+
+-define(SPECIAL_NOTIFICATIONS, [<<"system_alert">>, <<"webhook">>, <<"voicemail_saved">>]).
+-define(NOTIFICATIONS, [{<<"voicemail_new">>
+                        ,<<"New Voicemail Message">>
+                        ,fun kapi_notifications:voicemail_new/1
+                        ,fun kapi_notifications:voicemail_new_v/1
+                        ,fun kapi_notifications:publish_voicemail_new/1
+                        ,?NOTIFY_VOICEMAIL_SAVED
+                        ,'new_voicemail'
+                        ,?VOICEMAIL_NEW_HEADERS ++ ?OPTIONAL_VOICEMAIL_NEW_HEADERS
+                       }
+                       ,{<<"voicemail_saved">>
+                        ,<<"Voicemail Message Saved">>
+                        ,fun kapi_notifications:voicemail_saved/1
+                        ,fun kapi_notifications:voicemail_saved_v/1
+                        ,fun kapi_notifications:publish_voicemail_saved/1
+                        ,?NOTIFY_VOICEMAIL_SAVED
+                        ,'voicemail_saved'
+                        ,?VOICEMAIL_SAVED_HEADERS ++ ?OPTIONAL_VOICEMAIL_SAVED_HEADERS
+                       }
+                       ,{<<"voicemail_full">>
+                        ,<<"Voicemail Box Full">>
+                        ,fun kapi_notifications:voicemail_full/1
+                        ,fun kapi_notifications:voicemail_full_v/1
+                        ,fun kapi_notifications:publish_voicemail_full/1
+                        ,?NOTIFY_VOICEMAIL_FULL
+                        ,'voicemail_full'
+                        ,?VOICEMAIL_FULL_HEADERS ++ ?OPTIONAL_VOICEMAIL_FULL_HEADERS
+                       }
+                       ,{<<"inbound_fax">>
+                        ,<<"New Inbound Fax">>
+                        ,fun kapi_notifications:fax_inbound/1
+                        ,fun kapi_notifications:fax_inbound_v/1
+                        ,fun kapi_notifications:publish_fax_inbound/1
+                        ,?NOTIFY_FAX_INBOUND
+                        ,'inbound_fax'
+                        ,?FAX_INBOUND_HEADERS ++ ?OPTIONAL_FAX_INBOUND_HEADERS
+                       }
+                       ,{<<"outbound_fax">>
+                        ,<<"New Outbound Fax">>
+                        ,fun kapi_notifications:fax_outbound/1
+                        ,fun kapi_notifications:fax_outbound_v/1
+                        ,fun kapi_notifications:publish_fax_outbound/1
+                        ,?NOTIFY_FAX_OUTBOUND
+                        ,'outbound_fax'
+                        ,?FAX_OUTBOUND_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_HEADERS
+                       }
+                       ,{<<"inbound_fax_error">>
+                        ,<<"Inbound Fax Error">>
+                        ,fun kapi_notifications:fax_inbound_error/1
+                        ,fun kapi_notifications:fax_inbound_error_v/1
+                        ,fun kapi_notifications:publish_fax_inbound_error/1
+                        ,?NOTIFY_FAX_INBOUND_ERROR
+                        ,'inbound_fax_error'
+                        ,?FAX_INBOUND_ERROR_HEADERS ++ ?OPTIONAL_FAX_INBOUND_ERROR_HEADERS
+                       }
+                       ,{<<"outbound_fax_error">>
+                        ,<<"Outbound Fax Error">>
+                        ,fun kapi_notifications:fax_outbound_error/1
+                        ,fun kapi_notifications:fax_outbound_error_v/1
+                        ,fun kapi_notifications:publish_fax_outbound_error/1
+                        ,?NOTIFY_FAX_OUTBOUND_ERROR
+                        ,'outbound_fax_error'
+                        ,?FAX_OUTBOUND_ERROR_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_ERROR_HEADERS
+                       }
+                       ,{<<"outbound_smtp_fax_error">>
+                        ,<<"Outbound Fax Email Error">>
+                        ,fun kapi_notifications:fax_outbound_smtp_error/1
+                        ,fun kapi_notifications:fax_outbound_smtp_error_v/1
+                        ,fun kapi_notifications:publish_fax_outbound_smtp_error/1
+                        ,?NOTIFY_FAX_OUTBOUND_SMTP_ERROR
+                        ,'outbound_smtp_fax_error'
+                        ,?FAX_OUTBOUND_SMTP_ERROR_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_SMTP_ERROR_HEADERS
+                       }
+                       ,{<<"register">>
+                        ,<<"Registration">>
+                        ,fun kapi_notifications:register/1
+                        ,fun kapi_notifications:register_v/1
+                        ,fun kapi_notifications:publish_register/1
+                        ,?NOTIFY_REGISTER
+                        ,'register'
+                        ,?REGISTER_HEADERS ++ ?OPTIONAL_REGISTER_HEADERS
+                       }
+                       ,{<<"deregister">>
+                        ,<<"De-Registration">>
+                        ,fun kapi_notifications:deregister/1
+                        ,fun kapi_notifications:deregister_v/1
+                        ,fun kapi_notifications:publish_deregister/1
+                        ,?NOTIFY_DEREGISTER
+                        ,'deregister'
+                        ,?DEREGISTER_HEADERS ++ ?OPTIONAL_DEREGISTER_HEADERS
+                       }
+                       ,{<<"password_recovery">>
+                        ,<<"Password Recovery">>
+                        ,fun kapi_notifications:password_recovery/1
+                        ,fun kapi_notifications:password_recovery_v/1
+                        ,fun kapi_notifications:publish_password_recovery/1
+                        ,?NOTIFY_PASSWORD_RECOVERY
+                        ,'password_recovery'
+                        ,?PASSWORD_RECOVERY_HEADERS ++ ?OPTIONAL_PASSWORD_RECOVERY_HEADERS
+                       }
+                       ,{<<"first_occurrence">>
+                        ,<<"Account First Occurrance">>
+                        ,fun kapi_notifications:first_occurrence/1
+                        ,fun kapi_notifications:first_occurrence_v/1
+                        ,fun kapi_notifications:publish_first_occurrence/1
+                        ,?NOTIFY_FIRST_OCCURRENCE
+                        ,'first_occurrence'
+                        ,?FIRST_OCCURRENCE_HEADERS ++ ?OPTIONAL_FIRST_OCCURRENCE_HEADERS
+                       }
+                       ,{<<"new_account">>
+                        ,<<"New account">>
+                        ,fun kapi_notifications:new_account/1
+                        ,fun kapi_notifications:new_account_v/1
+                        ,fun kapi_notifications:publish_new_account/1
+                        ,?NOTIFY_NEW_ACCOUNT
+                        ,'new_account'
+                        ,?NEW_ACCOUNT_HEADERS ++ ?OPTIONAL_NEW_ACCOUNT_HEADERS
+                       }
+                       ,{<<"new_user">>
+                        ,<<"New User">>
+                        ,fun kapi_notifications:new_user/1
+                        ,fun kapi_notifications:new_user_v/1
+                        ,fun kapi_notifications:publish_new_user/1
+                        ,?NOTIFY_NEW_USER
+                        ,'new_user'
+                        ,?NEW_USER_HEADERS ++ ?OPTIONAL_NEW_USER_HEADERS
+                       }
+                       ,{<<"account_zone_change">>
+                        ,<<"Account Zone Change">>
+                        ,fun kapi_notifications:account_zone_change/1
+                        ,fun kapi_notifications:account_zone_change_v/1
+                        ,fun kapi_notifications:publish_account_zone_change/1
+                        ,?NOTIFY_ACCOUNT_ZONE_CHANGE
+                        ,'account_zone_change'
+                        ,?ACCOUNT_ZONE_CHANGE_HEADERS ++ ?OPTIONAL_ACCOUNT_ZONE_CHANGE_HEADERS
+                       }
+                       ,{<<"port_unconfirmed">>
+                        ,<<"Port Unconfirmed">>
+                        ,fun kapi_notifications:port_unconfirmed/1
+                        ,fun kapi_notifications:port_unconfirmed_v/1
+                        ,fun kapi_notifications:publish_port_unconfirmed/1
+                        ,?NOTIFY_PORT_UNCONFIRMED
+                        ,'port_unconfirmed'
+                        ,?PORT_UNCONFIRMED_HEADERS ++ ?OPTIONAL_PORT_UNCONFIRMED_HEADERS
+                       }
+                       ,{<<"port_request">>
+                        ,<<"Port Request">>
+                        ,fun kapi_notifications:port_request/1
+                        ,fun kapi_notifications:port_request_v/1
+                        ,fun kapi_notifications:publish_port_request/1
+                        ,?NOTIFY_PORT_REQUEST
+                        ,'port_request'
+                        ,?PORT_REQUEST_HEADERS ++ ?OPTIONAL_PORT_REQUEST_HEADERS
+                       }
+                       ,{<<"port_pending">>
+                        ,<<"Port Pending">>
+                        ,fun kapi_notifications:port_pending/1
+                        ,fun kapi_notifications:port_pending_v/1
+                        ,fun kapi_notifications:publish_port_pending/1
+                        ,?NOTIFY_PORT_PENDING
+                        ,'port_pending'
+                        ,?PORT_PENDING_HEADERS ++ ?OPTIONAL_PORT_PENDING_HEADERS
+                       }
+                       ,{<<"port_scheduled">>
+                        ,<<"Port Scheduled">>
+                        ,fun kapi_notifications:port_scheduled/1
+                        ,fun kapi_notifications:port_scheduled_v/1
+                        ,fun kapi_notifications:publish_port_scheduled/1
+                        ,?NOTIFY_PORT_SCHEDULED
+                        ,'port_scheduled'
+                        ,?PORT_SCHEDULED_HEADERS ++ ?OPTIONAL_PORT_SCHEDULED_HEADERS
+                       }
+                       ,{<<"port_cancel">>
+                        ,<<"Port Cancel">>
+                        ,?NOTIFY_PORT_CANCEL
+                        ,fun kapi_notifications:port_cancel/1
+                        ,fun kapi_notifications:port_cancel_v/1
+                        ,fun kapi_notifications:publish_port_cancel/1
+                        ,'port_cancel'
+                        ,?PORT_CANCEL_HEADERS ++ ?OPTIONAL_PORT_CANCEL_HEADERS
+                       }
+                       ,{<<"port_rejected">>
+                        ,<<"Port Rejected">>
+                        ,fun kapi_notifications:port_rejected/1
+                        ,fun kapi_notifications:port_rejected_v/1
+                        ,fun kapi_notifications:publish_port_rejected/1
+                        ,?NOTIFY_PORT_REJECTED
+                        ,'port_rejected'
+                        ,?PORT_REJECTED_HEADERS ++ ?OPTIONAL_PORT_REJECTED_HEADERS
+                       }
+                       ,{<<"ported">>
+                        ,<<"Ported">>
+                        ,fun kapi_notifications:ported/1
+                        ,fun kapi_notifications:ported_v/1
+                        ,fun kapi_notifications:publish_ported/1
+                        ,?NOTIFY_PORTED
+                        ,'ported'
+                        ,?PORTED_HEADERS ++ ?OPTIONAL_PORTED_HEADERS
+                       }
+                       ,{<<"port_comment">>
+                        ,<<"Port Comment">>
+                        ,fun kapi_notifications:port_comment/1
+                        ,fun kapi_notifications:port_comment_v/1
+                        ,fun kapi_notifications:publish_port_comment/1
+                        ,?NOTIFY_PORT_COMMENT
+                        ,'port_comment'
+                        ,?PORT_COMMENT_HEADERS ++ ?OPTIONAL_PORT_COMMENT_HEADERS
+                       }
+                       ,{<<"cnam_request">>
+                        ,<<"CNAM Update">>
+                        ,fun kapi_notifications:cnam_request/1
+                        ,fun kapi_notifications:cnam_request_v/1
+                        ,fun kapi_notifications:publish_cnam_request/1
+                        ,?NOTIFY_CNAM_REQUEST
+                        ,'cnam_requests'
+                        ,?CNAM_REQUEST_HEADERS ++ ?OPTIONAL_CNAM_REQUEST_HEADERS
+                       }
+                       ,{<<"low_balance">>
+                        ,<<"Account Low Balance">>
+                        ,?NOTIFY_LOW_BALANCE
+                        ,fun kapi_notifications:low_balance/1
+                        ,fun kapi_notifications:low_balance_v/1
+                        ,fun kapi_notifications:publish_low_balance/1
+                        ,'low_balance'
+                        ,?LOW_BALANCE_HEADERS ++ ?OPTIONAL_LOW_BALANCE_HEADERS
+                       }
+                       ,{<<"topup">>
+                        ,<<"Account Topup">>
+                        ,fun kapi_notifications:topup/1
+                        ,fun kapi_notifications:topup_v/1
+                        ,fun kapi_notifications:publish_topup/1
+                        ,?NOTIFY_TOPUP
+                        ,'topup'
+                        ,?TOPUP_HEADERS ++ ?OPTIONAL_TOPUP_HEADERS
+                       }
+                       ,{<<"transaction">>
+                        ,<<"Transaction Completed">>
+                        ,fun kapi_notifications:transaction/1
+                        ,fun kapi_notifications:transaction_v/1
+                        ,fun kapi_notifications:publish_transaction/1
+                        ,?NOTIFY_TRANSACTION
+                        ,'transaction'
+                        ,?TRANSACTION_HEADERS ++ ?OPTIONAL_TRANSACTION_HEADERS
+                       }
+                       ,{<<"webhook">>
+                        ,<<"Callflow Webhook Triggered">>
+                        ,fun kapi_notifications:webhook/1
+                        ,fun kapi_notifications:webhook_v/1
+                        ,fun kapi_notifications:publish_webhook/1
+                        ,?NOTIFY_WEBHOOK_CALLFLOW
+                        ,'webhook'
+                        ,?WEBHOOK_HEADERS ++ ?OPTIONAL_WEBHOOK_HEADERS
+                       }
+                       ,{<<"webhook_disabled">>
+                        ,<<"Webhook Disabled">>
+                        ,fun kapi_notifications:webhook_disabled/1
+                        ,fun kapi_notifications:webhook_disabled_v/1
+                        ,fun kapi_notifications:publish_webhook_disabled/1
+                        ,?NOTIFY_WEBHOOK_DISABLED
+                        ,'webhook_disabled'
+                        ,?WEBHOOK_DISABLED_HEADERS ++ ?OPTIONAL_WEBHOOK_DISABLED_HEADERS
+                       }
+                       ,{<<"denied_emergency_bridge">>
+                        ,<<"Emergency Call Failed">>
+                        ,fun kapi_notifications:denied_emergency_bridge/1
+                        ,fun kapi_notifications:denied_emergency_bridge_v/1
+                        ,fun kapi_notifications:publish_denied_emergency_bridge/1
+                        ,?NOTIFY_DENIED_EMERGENCY_BRIDGE
+                        ,'denied_emergency_bridge'
+                        ,?DENIED_EMERGENCY_BRIDGE_HEADERS ++ ?OPTIONAL_DENIED_EMERGENCY_BRIDGE_HEADERS
+                       }
+                       ,{<<"customer_update">>
+                        ,<<"Customer Update">>
+                        ,fun kapi_notifications:customer_update/1
+                        ,fun kapi_notifications:customer_update_v/1
+                        ,fun kapi_notifications:publish_customer_update/1
+                        ,?NOTIFY_CUSTOMER_UPDATE
+                        ,'customer_update'
+                        ,?CUSTOMER_UPDATE_HEADERS ++ ?OPTIONAL_CUSTOMER_UPDATE_HEADERS
+                       }
+                       ,{<<"service_added">>
+                        ,<<"Service Added">>
+                        ,fun kapi_notifications:service_added/1
+                        ,fun kapi_notifications:service_added_v/1
+                        ,fun kapi_notifications:publish_service_added/1
+                        ,?NOTIFY_SERVICE_ADDED
+                        ,'service_added'
+                        ,?SERVICE_ADDED_HEADERS ++ ?OPTIONAL_SERVICE_ADDED_HEADERS
+                       }
+                       ,{<<"missed_call">>
+                        ,<<"Missed Call Triggered">>
+                        ,fun kapi_notifications:missed_call/1
+                        ,fun kapi_notifications:missed_call_v/1
+                        ,fun kapi_notifications:publish_missed_call/1
+                        ,?NOTIFY_MISSED_CALL
+                        ,'missed_call'
+                        ,?MISSED_CALL_HEADERS ++ ?OPTIONAL_MISSED_CALL_HEADERS
+                       }
+                       ,{<<"system_alert">>
+                        ,<<"System Alert">>
+                        ,fun kapi_notifications:system_alert/1
+                        ,fun kapi_notifications:system_alert_v/1
+                        ,fun kapi_notifications:publish_system_alert/1
+                        ,?NOTIFY_SYSTEM_ALERT
+                        ,'system_alerts'
+                        ,?SYSTEM_ALERT_HEADERS ++ ?OPTIONAL_SYSTEM_ALERT_HEADERS
+                       }
+                       ,{<<"skel">>
+                        ,<<"Example Notificaiton">>
+                        ,fun kapi_notifications:skel/1
+                        ,fun kapi_notifications:skel_v/1
+                        ,fun kapi_notifications:publish_skel/1
+                        ,?NOTIFY_SKEL
+                        ,'skel'
+                        ,?SKEL_HEADERS ++ ?OPTIONAL_SKEL_HEADERS
+                       }]).
+
+-spec definitions() -> definitions().
+definitions() -> ?NOTIFICATIONS.
+
+-spec special_notifications() -> [atom()].
+special_notifications() -> ?SPECIAL_NOTIFICATIONS.
+
+-spec definition_type(definition()) -> ne_binary().
+definition_type({Type, _, _, _, _, _, _, _}) -> Type.
+
+-spec definition_friendly_name(definition()) -> ne_binary().
+definition_friendly_name({_, FriendlyName, _, _, _, _, _, _}) -> FriendlyName.
+
+-spec definition_build_function(definition()) -> fun((api_terms()) -> api_formatter_return()).
+definition_build_function({_, _, Builder, _, _, _, _, _}) -> Builder.
+
+-spec definition_validate_function(definition()) -> fun((api_terms()) -> boolean()).
+definition_validate_function({_, _, _, Validator, _, _, _, _}) -> Validator.
+
+-spec definition_publish_function(definition()) -> fun((api_terms()) -> api_formatter_return()).
+definition_publish_function({_, _, _, _, Publisher, _, _, _}) -> Publisher.
+
+-spec definition_binding(definition()) -> ne_binary().
+definition_binding({_, _, _, _, _, Binding, _, _}) -> Binding.
+
+-spec definition_restrict_to(definition()) -> ne_binary().
+definition_restrict_to({_, _, _, _, _, _, RestrictTo, _}) -> RestrictTo.
+
+-spec definition_headers(definition()) -> ne_binaries().
+definition_headers({_, _, _, _, _, _, _, Headers}) -> Headers.
+
 -spec account_id(api_terms()) -> api_ne_binary().
 account_id('undefined') -> 'undefined';
 account_id(Req) when is_list(Req) -> find_account_id(Req, fun props:get_first_defined/2);
@@ -628,75 +997,23 @@ find_account_db(Req, StrictMODB, GetFun) ->
     end.
 
 -spec headers(ne_binary()) -> ne_binaries().
-headers(<<"voicemail_new">>) ->
-    ?VOICEMAIL_NEW_HEADERS ++ ?OPTIONAL_VOICEMAIL_NEW_HEADERS;
-headers(<<"voicemail_full">>) ->
-    ?VOICEMAIL_FULL_HEADERS ++ ?OPTIONAL_VOICEMAIL_FULL_HEADERS;
-headers(<<"voicemail_saved">>) ->
-    ?VOICEMAIL_SAVED_HEADERS ++ ?OPTIONAL_VOICEMAIL_SAVED_HEADERS;
 headers(<<"fax_inbound_to_email">>) ->
-    ?FAX_INBOUND_HEADERS ++ ?OPTIONAL_FAX_INBOUND_HEADERS;
+    headers(<<"inbound_fax">>);
 headers(<<"fax_inbound_error_to_email">>) ->
-    ?FAX_INBOUND_ERROR_HEADERS ++ ?OPTIONAL_FAX_INBOUND_ERROR_HEADERS;
+    headers(<<"inbound_fax_error">>);
 headers(<<"fax_outbound_to_email">>) ->
-    ?FAX_OUTBOUND_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_HEADERS;
+    headers(<<"outbound_fax">>);
 headers(<<"fax_outbound_error_to_email">>) ->
-    ?FAX_OUTBOUND_ERROR_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_ERROR_HEADERS;
+    headers(<<"outbound_fax_error">>);
 headers(<<"fax_outbound_smtp_error">>) ->
-    ?FAX_OUTBOUND_SMTP_ERROR_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_SMTP_ERROR_HEADERS;
-headers(<<"low_balance">>) ->
-    ?LOW_BALANCE_HEADERS ++ ?OPTIONAL_LOW_BALANCE_HEADERS;
-headers(<<"new_account">>) ->
-    ?NEW_ACCOUNT_HEADERS ++ ?OPTIONAL_NEW_ACCOUNT_HEADERS;
-headers(<<"account_zone_change">>) ->
-    ?ACCOUNT_ZONE_CHANGE_HEADERS ++ ?OPTIONAL_ACCOUNT_ZONE_CHANGE_HEADERS;
-headers(<<"new_user">>) ->
-    ?NEW_USER_HEADERS ++ ?OPTIONAL_NEW_USER_HEADERS;
-headers(<<"deregister">>) ->
-    ?DEREGISTER_HEADERS ++ ?OPTIONAL_DEREGISTER_HEADERS;
-headers(<<"first_occurrence">>) ->
-    ?FIRST_OCCURRENCE_HEADERS ++ ?OPTIONAL_FIRST_OCCURRENCE_HEADERS;
-headers(<<"transaction">>) ->
-    ?TRANSACTION_HEADERS ++ ?OPTIONAL_TRANSACTION_HEADERS;
-headers(<<"service_added">>) ->
-    ?SERVICE_ADDED_HEADERS ++ ?OPTIONAL_SERVICE_ADDED_HEADERS;
-headers(<<"password_recovery">>) ->
-    ?PASSWORD_RECOVERY_HEADERS ++ ?OPTIONAL_PASSWORD_RECOVERY_HEADERS;
-headers(<<"system_alert">>) ->
-    ?SYSTEM_ALERT_HEADERS ++ ?OPTIONAL_SYSTEM_ALERT_HEADERS;
-headers(<<"cnam_request">>) ->
-    ?CNAM_REQUEST_HEADERS ++ ?OPTIONAL_CNAM_REQUEST_HEADERS;
-headers(<<"topup">>) ->
-    ?TOPUP_HEADERS ++ ?OPTIONAL_TOPUP_HEADERS;
-headers(<<"port_unconfirmed">>) ->
-    ?PORT_UNCONFIRMED_HEADERS ++ ?OPTIONAL_PORT_UNCONFIRMED_HEADERS;
-headers(<<"port_request">>) ->
-    ?PORT_REQUEST_HEADERS ++ ?OPTIONAL_PORT_REQUEST_HEADERS;
-headers(<<"port_pending">>) ->
-    ?PORT_PENDING_HEADERS ++ ?OPTIONAL_PORT_PENDING_HEADERS;
-headers(<<"port_scheduled">>) ->
-    ?PORT_SCHEDULED_HEADERS ++ ?OPTIONAL_PORT_SCHEDULED_HEADERS;
-headers(<<"port_cancel">>) ->
-    ?PORT_CANCEL_HEADERS ++ ?OPTIONAL_PORT_CANCEL_HEADERS;
-headers(<<"port_rejected">>) ->
-    ?PORT_REJECTED_HEADERS ++ ?OPTIONAL_PORT_REJECTED_HEADERS;
-headers(<<"ported">>) ->
-    ?PORTED_HEADERS ++ ?OPTIONAL_PORTED_HEADERS;
-headers(<<"port_comment">>) ->
-    ?PORT_COMMENT_HEADERS ++ ?OPTIONAL_PORT_COMMENT_HEADERS;
-headers(<<"webhook_disabled">>) ->
-    ?WEBHOOK_DISABLED_HEADERS ++ ?OPTIONAL_WEBHOOK_DISABLED_HEADERS;
-headers(<<"denied_emergency_bridge">>) ->
-    ?DENIED_EMERGENCY_BRIDGE_HEADERS ++ ?OPTIONAL_DENIED_EMERGENCY_BRIDGE_HEADERS;
-headers(<<"customer_update">>) ->
-    ?CUSTOMER_UPDATE_HEADERS ++ ?OPTIONAL_CUSTOMER_UPDATE_HEADERS;
-headers(<<"missed_call">>) ->
-    ?MISSED_CALL_HEADERS ++ ?OPTIONAL_MISSED_CALL_HEADERS;
-headers(<<"skel">>) ->
-    ?SKEL_HEADERS ++ ?OPTIONAL_SKEL_HEADERS;
-headers(_Notification) ->
-    lager:warning("no notification headers for ~s", [_Notification]),
-    [].
+    headers(<<"outbound_smtp_fax_error">>);
+headers(Type) ->
+    case props:get_value(Type, definitions()) of
+        'undefined' ->
+            lager:warning("no notification headers for ~s", [Type]),
+            [];
+        Definition -> definition_headers(Definition)
+    end.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -1384,125 +1701,39 @@ skel_v(JObj) -> skel_v(kz_json:to_proplist(JObj)).
 
 -spec bind_q(ne_binary(), options()) -> 'ok'.
 bind_q(Queue, Props) ->
+        lager:debug("bind ~p: ~p", [Queue, Props]),
     bind_to_q(Queue, props:get_value('restrict_to', Props)).
 
 -spec bind_to_q(ne_binary(), restrictions() | 'undefined') -> 'ok'.
 bind_to_q(Q, 'undefined') ->
+        lager:debug("wild card binding!!", []),
     'ok' = amqp_util:bind_q_to_notifications(Q, <<"notifications.*.*">>);
-bind_to_q(Q, ['new_voicemail'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_VOICEMAIL_NEW),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['voicemail_saved'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_VOICEMAIL_SAVED),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['voicemail_full'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_VOICEMAIL_FULL),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['inbound_fax'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_INBOUND),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['outbound_fax'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_OUTBOUND),
-    bind_to_q(Q, T);
 bind_to_q(Q, ['new_fax'|T]) ->
+        lager:debug("using new fax", []),
     'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_INBOUND),
     'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_OUTBOUND),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['inbound_fax_error'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_INBOUND_ERROR),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['outbound_fax_error'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_OUTBOUND_ERROR),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['outbound_smtp_fax_error'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_OUTBOUND_SMTP_ERROR),
     bind_to_q(Q, T);
 bind_to_q(Q, ['fax_error'|T]) ->
+        lager:debug("using fax error", []),
     'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_INBOUND_ERROR),
     'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_OUTBOUND_ERROR),
     bind_to_q(Q, T);
-bind_to_q(Q, ['register'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_REGISTER),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['deregister'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_DEREGISTER),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['password_recovery'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_PASSWORD_RECOVERY),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['first_occurrence'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FIRST_OCCURRENCE),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['new_account'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_NEW_ACCOUNT),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['account_zone_change'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_ACCOUNT_ZONE_CHANGE),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['new_user'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_NEW_USER),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['port_unconfirmed'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_PORT_UNCONFIRMED),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['port_request'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_PORT_REQUEST),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['port_pending'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_PORT_PENDING),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['port_scheduled'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_PORT_SCHEDULED),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['port_rejected'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_PORT_REJECTED),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['port_cancel'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_PORT_CANCEL),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['ported'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_PORTED),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['port_comment'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_PORT_COMMENT),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['cnam_requests'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_CNAM_REQUEST),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['low_balance'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_LOW_BALANCE),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['topup'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_TOPUP),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['transaction'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_TRANSACTION),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['system_alerts'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_SYSTEM_ALERT),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['webhook'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_WEBHOOK_CALLFLOW),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['webhook_disabled'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_WEBHOOK_DISABLED),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['denied_emergency_bridge'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_DENIED_EMERGENCY_BRIDGE),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['customer_update'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_CUSTOMER_UPDATE),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['missed_call'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_MISSED_CALL),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['skel'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_SKEL),
-    bind_to_q(Q, T);
-bind_to_q(Q, ['service_added'|T]) ->
-    'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_SERVICE_ADDED),
-    bind_to_q(Q, T);
+bind_to_q(Q, [RestrictTo|T]) ->
+    case [definition_binding(Definition) 
+         || Definition <- definitions()
+          ,definition_restrict_to(Definition) =:= RestrictTo
+         ]
+    of
+        [Binding] ->
+        lager:debug("found ~s as ~p", [RestrictTo, Binding]),
+            'ok' = amqp_util:bind_q_to_notifications(Q, Binding),
+            bind_to_q(Q, T);
+        _Else ->
+        lager:debug("failed to find ~s got ~p", [RestrictTo, _Else]),
+            bind_to_q(Q, T)
+    end;
 bind_to_q(_Q, []) ->
+        lager:debug("done binding", []),
     'ok'.
 
 -spec unbind_q(ne_binary(), options()) -> 'ok'.
@@ -1512,116 +1743,25 @@ unbind_q(Queue, Props) ->
 -spec unbind_q_from(ne_binary(), restrictions() | 'undefined') -> 'ok'.
 unbind_q_from(Q, 'undefined') ->
     'ok' = amqp_util:unbind_q_from_notifications(Q, <<"notifications.*.*">>);
-unbind_q_from(Q, ['new_voicemail'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_VOICEMAIL_NEW),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['voicemail_full'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_VOICEMAIL_FULL),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['inbound_fax'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_INBOUND),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['outbound_fax'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_OUTBOUND),
-    unbind_q_from(Q, T);
 unbind_q_from(Q, ['new_fax'|T]) ->
     'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_INBOUND),
     'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_OUTBOUND),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['inbound_fax_error'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_INBOUND_ERROR),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['outbound_fax_error'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_OUTBOUND_ERROR),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['outbound_smtp_fax_error'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_OUTBOUND_SMTP_ERROR),
     unbind_q_from(Q, T);
 unbind_q_from(Q, ['fax_error'|T]) ->
     'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_OUTBOUND_ERROR),
     'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_INBOUND_ERROR),
     unbind_q_from(Q, T);
-unbind_q_from(Q, ['register'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_REGISTER),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['deregister'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_DEREGISTER),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['password_recovery'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_PASSWORD_RECOVERY),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['first_occurrence'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_FIRST_OCCURRENCE),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['new_account'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_NEW_ACCOUNT),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['account_zone_change'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_ACCOUNT_ZONE_CHANGE),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['new_user'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_NEW_USER),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['port_unconfirmed'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_PORT_UNCONFIRMED),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['port_request'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_PORT_REQUEST),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['port_pending'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_PORT_PENDING),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['port_scheduled'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_PORT_SCHEDULED),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['port_rejected'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_PORT_REJECTED),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['port_cancel'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_PORT_CANCEL),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['ported'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_PORTED),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['port_comment'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_PORT_COMMENT),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['cnam_request'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_CNAM_REQUEST),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['low_balance'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_LOW_BALANCE),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['topup'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_TOPUP),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['transaction'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_TRANSACTION),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['system_alert'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_SYSTEM_ALERT),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['webhook'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_WEBHOOK_CALLFLOW),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['webhook_disabled'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_WEBHOOK_DISABLED),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['denied_emergency_bridge'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_DENIED_EMERGENCY_BRIDGE),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['customer_update'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_CUSTOMER_UPDATE),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['missed_call'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_MISSED_CALL),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['skel'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_SKEL),
-    unbind_q_from(Q, T);
-unbind_q_from(Q, ['service_added'|T]) ->
-    'ok' = amqp_util:unbind_q_from_notifications(Q, ?NOTIFY_SERVICE_ADDED),
-    unbind_q_from(Q, T);
+unbind_q_from(Q, [RestrictTo|T]) ->
+    case [definition_binding(Definition) 
+         || Definition <- definitions()
+          ,definition_restrict_to(Definition) =:= RestrictTo
+         ]
+    of
+        [Binding] ->
+            'ok' = amqp_util:unbind_q_from_notifications(Q, Binding),
+            unbind_q_from(Q, T);
+        _Else -> unbind_q_from(Q, T)
+    end;
 unbind_q_from(_Q, []) ->
     'ok'.
 
