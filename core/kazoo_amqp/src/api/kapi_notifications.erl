@@ -780,10 +780,10 @@
                        }
                        ,{<<"port_cancel">>
                         ,<<"Port Cancel">>
-                        ,?NOTIFY_PORT_CANCEL
                         ,fun kapi_notifications:port_cancel/1
                         ,fun kapi_notifications:port_cancel_v/1
                         ,fun kapi_notifications:publish_port_cancel/1
+                        ,?NOTIFY_PORT_CANCEL
                         ,'port_cancel'
                         ,?PORT_CANCEL_HEADERS ++ ?OPTIONAL_PORT_CANCEL_HEADERS
                        }
@@ -825,10 +825,10 @@
                        }
                        ,{<<"low_balance">>
                         ,<<"Account Low Balance">>
-                        ,?NOTIFY_LOW_BALANCE
                         ,fun kapi_notifications:low_balance/1
                         ,fun kapi_notifications:low_balance_v/1
                         ,fun kapi_notifications:publish_low_balance/1
+                        ,?NOTIFY_LOW_BALANCE
                         ,'low_balance'
                         ,?LOW_BALANCE_HEADERS ++ ?OPTIONAL_LOW_BALANCE_HEADERS
                        }
