@@ -3,6 +3,7 @@
 -include_lib("kazoo_stdlib/include/kz_types.hrl").
 -include_lib("kazoo_stdlib/include/kz_log.hrl").
 -include_lib("kazoo_documents/include/kazoo_documents.hrl").
+-include_lib("kazoo_amqp/include/kz_amqp.hrl").
 
 -include("fs_event_filters.hrl").
 -include("fs_mod_kazoo_event_filters.hrl").
@@ -140,9 +141,9 @@
                      ,join_time = kz_time:now_s() :: gregorian_seconds() | '_'
                      ,caller_id_name :: api_ne_binary() | '_'
                      ,caller_id_number :: api_ne_binary() | '_'
-                     ,conference_channel_vars = [] :: kz_proplist() | '_'
-                     ,custom_channel_vars = [] :: kz_proplist() | '_'
-                     ,custom_application_vars = [] :: kz_proplist() | '_'
+                     ,conference_channel_vars :: api_object() | '_'
+                     ,custom_channel_vars :: api_object() | '_'
+                     ,custom_application_vars = [] :: api_object() | '_'
                      }).
 -type participant() :: #participant{}.
 -type participants() :: [participant()].
