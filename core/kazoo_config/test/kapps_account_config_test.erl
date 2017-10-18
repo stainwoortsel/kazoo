@@ -60,8 +60,8 @@ get_global_test_() ->
                         kapps_account_config:get_global(AccountId, Category, Key)
                 end,
     SysDefaultValue = kz_doc:set_account_db(get_fixture_value(<<"default">>, "test_cat_system"), ?KZ_CONFIG_DB),
-    ResellerFixture = kapps_config_util:fixture("test_cat_reseller"),
-    SubAccountFixture = kapps_config_util:fixture("test_cat_subaccount_1"),
+    {ok, ResellerFixture} = kz_json:fixture(?APP, "fixture/test_cat_reseller.json"),
+    {ok, SubAccountFixture} = kz_json:fixture(?APP, "fixture/test_cat_subaccount_1.json"),
     EmptySysDoc = kz_doc:set_account_db(kz_json:new(), ?KZ_CONFIG_DB),
 
     [{"Testing get global account config"
@@ -303,4 +303,5 @@ get_startegy_hierarchy_merge() ->
 
 
 get_fixture_value(Key, Fixture) ->
-    kz_json:get_value(Key, kapps_config_util:fixture(Fixture)).
+    {ok, JObj} = kz_json:fixture(?APP, "fixture" ++ Fixture ++ ".json"),
+    kz_json:get_value(Key, JObj).

@@ -471,7 +471,7 @@ send_update(DataJObj, Status, Message, Metadata) ->
 
 -spec send_update(api_binary(), ne_binary(), ne_binary(), api_binary(), api_object()) -> 'ok'.
 send_update('undefined', _, _, _, _) ->
-    lager:debug("no response queue available, not publishing update");
+    ?LOG_DEBUG("no response queue available, not publishing update");
 send_update(RespQ, MsgId, Status, Msg, Metadata) ->
     Prop = props:filter_undefined(
              [{<<"Status">>, Status}
@@ -480,7 +480,7 @@ send_update(RespQ, MsgId, Status, Msg, Metadata) ->
              ,{<<"Metadata">>, Metadata}
               | kz_api:default_headers(?APP_NAME, ?APP_VERSION)
              ]),
-    lager:debug("notification update (~s) sending to ~s", [Status, RespQ]),
+    ?LOG_DEBUG("notification update (~s) sending to ~s", [Status, RespQ]),
     kz_amqp_worker:cast(Prop, fun(P) -> kapi_notifications:publish_notify_update(RespQ, P) end).
 
 -spec find_account_rep_email(api_object() | ne_binary()) -> api_binaries().
@@ -526,7 +526,7 @@ query_account_for_admin_emails(<<_/binary>> = AccountId) ->
         {'ok', []} -> [];
         {'ok', Users} -> extract_admin_emails(Users);
         {'error', _E} ->
-            lager:debug("failed to find users in ~s: ~p", [AccountId, _E]),
+            ?LOG_DEBUG("failed to find users in ~s: ~p", [AccountId, _E]),
             []
     end.
 

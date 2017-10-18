@@ -112,14 +112,6 @@ log_stacktrace(Fmt, Args) ->
     ST = erlang:get_stacktrace(),
     log_stacktrace(ST, Fmt, Args).
 
--ifdef(TEST).
--define(LOG_ERROR(F), io:format(user, "ERROR ~s:~p  " ++ F ++ "\n", [?MODULE,?LINE])).
--define(LOG_ERROR(F,A), io:format(user, "ERROR ~s:~p  " ++ F ++ "\n", [?MODULE,?LINE|A])).
--else.
--define(LOG_ERROR(F,A), lager:error(F,A)).
--define(LOG_ERROR(F), lager:error(F)).
--endif.
-
 log_stacktrace(ST, Fmt, Args) ->
     ?LOG_ERROR("stacktrace: " ++ Fmt, Args),
     _ = [log_stacktrace_mfa(M, F, A, Info)
@@ -653,7 +645,7 @@ find_callid(APITerm) ->
 find_callid(APITerm, GetFun) ->
     GetFun([?KEY_LOG_ID, ?KEY_API_CALL_ID, ?KEY_MSG_ID]
           ,APITerm
-          ,?LOG_SYSTEM_ID
+          ,?DEFAULT_LOG_SYSTEM_ID
           ).
 
 %% @public

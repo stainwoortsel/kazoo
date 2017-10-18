@@ -85,7 +85,7 @@ compile_master_renderers(TemplateId) ->
     _ = [build_renderer(TemplateId, ContentType, Template)
          || {ContentType, Template} <- fetch_master_attachments(TemplateId)
         ],
-    lager:debug("built master renderers for ~s", [TemplateId]).
+    ?LOG_DEBUG("built master renderer modules for ~s", [TemplateId]).
 
 -spec build_renderer(ne_binary(), ne_binary(), binary()) -> 'ok'.
 build_renderer(TemplateId, ContentType, Template) ->
@@ -93,7 +93,7 @@ build_renderer(TemplateId, ContentType, Template) ->
     case kz_template:compile(Template, ModuleName,[{'auto_escape', 'false'}]) of
         {'ok', _} -> 'ok';
         {'error', _E} ->
-            lager:debug("failed to render '~s': ~p", [TemplateId, _E]),
+            ?LOG_DEBUG("failed to render '~s': ~p", [TemplateId, _E]),
             throw({'error', 'failed_template', ModuleName})
     end.
 
