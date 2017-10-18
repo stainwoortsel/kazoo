@@ -807,9 +807,9 @@ give_me_something(<<"account">>, AccountId, _)
 give_me_something(<<"account">>, AccountId, _)
   when AccountId =:= ?CUSTOMIZED_RESELLER_HIER; %%only load_from_ancestors
        AccountId =:= ?SELF_RESELLER ->
-    {ok, kapps_config_util:fixture("test_cat_reseller")};
+    kz_json:fixture(?APP, "fixture/test_cat_reseller.json");
 give_me_something(<<"account">>, ?CUSTOMIZED_SUBACCOUNT_1, _) ->
-    {ok, kapps_config_util:fixture("test_cat_subaccount_1")};
+    kz_json:fixture(?APP, "fixture/test_cat_subaccount_1.json");
 %% only load_from_ancestors (clause below)
 give_me_something(<<"account">>, AccountId, _)
   when AccountId =:= ?CUST_A_CUST_P_CUST_R;
@@ -817,7 +817,7 @@ give_me_something(<<"account">>, AccountId, _)
        AccountId =:= ?CUST_A_CUST_P_EMPTY_R;
        AccountId =:= ?CUST_A_404_P_CUST_R;
        AccountId =:= ?CUST_A_404_P_404_R ->
-    {ok, kapps_config_util:fixture("test_cat_subaccount_2")};
+    kz_json:fixture(?APP, "fixture/test_cat_subaccount_2.json");
 give_me_something(<<"account">>, _AccountId, _) ->
     {error, not_found};
 
@@ -831,7 +831,7 @@ give_me_something(<<"reseller_id">>, _AccountId, _) ->
 
 %% A Reseller Config (only load_from_reseller)
 give_me_something(<<"reseller_jobj">>, ?SELF_RESELLER, _) ->
-    {ok, kapps_config_util:fixture("test_cat_reseller")};
+    kz_json:fixture(?APP, "fixture/test_cat_reseller.json");
 
 %% Account Tree (only load_from_ancestors)
 give_me_something(<<"parent_id">>, ?CUST_A_CUST_P_CUST_R, _) ->

@@ -1169,15 +1169,12 @@ load_fixture_from_file(App, Dir, File) ->
     end.
 
 -ifdef(TEST).
--spec fixture(atom(), file:filename_all()) -> {ok,object()} | {error,any()}.
+-spec fixture(atom(), file:filename_all()) -> {ok, object()} | {error, any()}.
 fixture(App, Path0) when is_atom(App) ->
     Path = filename:join(code:lib_dir(App, test), Path0),
-    io:format(user, "reading fixture from ~s\n", [Path]),
     case file:read_file(Path) of
         {ok, Bin} -> {ok, decode(Bin)};
-        {error, _R}=E ->
-            io:format(user, "error fetching ~s: ~p\n", [Path0, _R]),
-            E
+        {error, _R}=E -> E
     end.
 -endif.
 

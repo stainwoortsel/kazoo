@@ -89,13 +89,6 @@
 
 -define(AN_ACCOUNT_USER_ID, <<"8e248327b85591955749e53ea45b6baa">>).
 
--define(LOG_DEBUG(F,A), io:format(user, "\n" ++ "~s:~p  " ++ F ++ "\n", [?MODULE,?LINE|A])).
--define(LOG_DEBUG(F), io:format(user, "\n" ++ "~s:~p  " ++ F ++ "\n", [?MODULE,?LINE])).
-
--else.
-
--define(LOG_DEBUG(F,A), lager:debug(F,A)).
--define(LOG_DEBUG(F), lager:debug(F)).
 -endif.
 
 -define(KAZOO_CONFIG_HRL, 'true').
