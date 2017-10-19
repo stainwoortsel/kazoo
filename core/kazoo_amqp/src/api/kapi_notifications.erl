@@ -112,7 +112,7 @@
                                   ,<<"Account-ID">>, <<"Account-DB">>
                                   ,<<"Preview">>, <<"Attachment-URL">>
                                   ]).
- 
+
 -define(NOTIFY_VOICEMAIL_SAVED, <<"notifications.voicemail.saved">>).
 -define(NOTIFY_VOICEMAIL_NEW, <<"notifications.voicemail.new">>).
 -define(NOTIFY_VOICEMAIL_FULL, <<"notifications.voicemail.full">>).
@@ -1701,39 +1701,32 @@ skel_v(JObj) -> skel_v(kz_json:to_proplist(JObj)).
 
 -spec bind_q(ne_binary(), options()) -> 'ok'.
 bind_q(Queue, Props) ->
-        lager:debug("bind ~p: ~p", [Queue, Props]),
     bind_to_q(Queue, props:get_value('restrict_to', Props)).
 
 -spec bind_to_q(ne_binary(), restrictions() | 'undefined') -> 'ok'.
 bind_to_q(Q, 'undefined') ->
-        lager:debug("wild card binding!!", []),
     'ok' = amqp_util:bind_q_to_notifications(Q, <<"notifications.*.*">>);
 bind_to_q(Q, ['new_fax'|T]) ->
-        lager:debug("using new fax", []),
     'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_INBOUND),
     'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_OUTBOUND),
     bind_to_q(Q, T);
 bind_to_q(Q, ['fax_error'|T]) ->
-        lager:debug("using fax error", []),
     'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_INBOUND_ERROR),
     'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_OUTBOUND_ERROR),
     bind_to_q(Q, T);
 bind_to_q(Q, [RestrictTo|T]) ->
-    case [definition_binding(Definition) 
+    case [definition_binding(Definition)
          || Definition <- definitions()
           ,definition_restrict_to(Definition) =:= RestrictTo
          ]
     of
         [Binding] ->
-        lager:debug("found ~s as ~p", [RestrictTo, Binding]),
             'ok' = amqp_util:bind_q_to_notifications(Q, Binding),
             bind_to_q(Q, T);
         _Else ->
-        lager:debug("failed to find ~s got ~p", [RestrictTo, _Else]),
             bind_to_q(Q, T)
     end;
 bind_to_q(_Q, []) ->
-        lager:debug("done binding", []),
     'ok'.
 
 -spec unbind_q(ne_binary(), options()) -> 'ok'.
@@ -1752,7 +1745,7 @@ unbind_q_from(Q, ['fax_error'|T]) ->
     'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_INBOUND_ERROR),
     unbind_q_from(Q, T);
 unbind_q_from(Q, [RestrictTo|T]) ->
-    case [definition_binding(Definition) 
+    case [definition_binding(Definition)
          || Definition <- definitions()
           ,definition_restrict_to(Definition) =:= RestrictTo
          ]
