@@ -15,6 +15,7 @@
     "Msg-ID": "bfab27af346149bb",
     "Node": "ecallmgr@sip.bla.com",
     "Realm": "myrealm.sip.bla.com",
+    "Server-ID": "7328de9",
     "Suppress-Unregister-Notify": false,
     "To-Host": "myrealm.sip.bla.com",
     "To-User": "user_bla",

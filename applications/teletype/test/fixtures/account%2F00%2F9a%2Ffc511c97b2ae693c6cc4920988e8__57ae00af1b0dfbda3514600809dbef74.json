@@ -1,0 +1,26 @@
+{
+    "_id": "57ae00af1b0dfbda3514600809dbef74",
+    "check_if_owner": true,
+    "delete_after_notify": false,
+    "is_setup": false,
+    "mailbox": "101",
+    "media": {},
+    "name": "John Doe's VMBox",
+    "not_configurable": false,
+    "owner_id": "user0000000000000000000000000003",
+    "pvt_account_db": "account%2F00%2F9a%2Ffc511c97b2ae693c6cc4920988e8",
+    "pvt_account_id": "009afc511c97b2ae693c6cc4920988e8",
+    "pvt_created": 63576902621,
+    "pvt_modified": 63580540501,
+    "pvt_request_id": "0e6a298d040f627290fb5e48d520a203",
+    "pvt_type": "vmbox",
+    "pvt_vsn": "1",
+    "require_pin": false,
+    "skip_greeting": false,
+    "skip_instructions": false,
+    "timezone": "America/Los_Angeles",
+    "ui_metadata": {
+        "ui": "monster-ui",
+        "version": "v3.15"
+    }
+}

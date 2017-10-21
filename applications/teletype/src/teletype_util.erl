@@ -357,9 +357,13 @@ user_params(UserJObj) ->
 -spec timezone(kzd_user:doc()) -> api_ne_binary().
 -ifdef(TEST).
 timezone(UserJObj) ->
-    ?AN_ACCOUNT_ID = kz_doc:account_id(UserJObj),
-    {ok,AccountJObj} = kz_json:fixture(?APP, "an_account.json"),
-    kz_account:timezone(AccountJObj).
+    case kz_doc:account_id(UserJObj) of
+        ?AN_ACCOUNT_ID ->
+          {ok,AccountJObj} = kz_json:fixture(?APP, "an_account.json"),
+          kz_account:timezone(AccountJObj);
+        _ ->
+            kzd_user:timezone(UserJObj)
+    end.
 -else.
 timezone(UserJObj) -> kzd_user:timezone(UserJObj).
 -endif.
