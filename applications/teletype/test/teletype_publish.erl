@@ -1,6 +1,8 @@
--module(hes_tests).
+-module(teletype_publish).
 
--include_lib("eunit/include/eunit.hrl").
+-export([publish/0]).
+
+%% -include_lib("eunit/include/eunit.hrl").
 -include("teletype.hrl").
 
 -define(TEST_POOL_ARGS, [{worker_module, teletype_renderer}
@@ -9,21 +11,30 @@
                         ,{max_overflow, 1}
                         ]).
 
--spec publishing_test_() -> any().
-publishing_test_() ->
-    {setup
-    ,fun setup_test/0
-    ,fun teardown/1
-    ,fun(_ReturnOfSetup) ->
-             [{"Test publishing " ++ binary_to_list(Id) ++ " notification"
-              ,pulish_notification(Id, PubFun)
-              }
-              || {Id, PubFun} <- [{teletype_voicemail_to_email:id(), fun kapi_notifications:publish_voicemail_new/1}
-                                 % ,{teletype_deregister:id(), fun kapi_notifications:publish_deregister/1}
-                                 ]
-             ]
-     end
-    }.
+-spec publish() -> any().
+publish() ->
+    %% {setup
+    %% ,fun setup_test/0
+    %% ,fun teardown/1
+    %% ,fun(_ReturnOfSetup) ->
+    %%          [{"Test publishing " ++ binary_to_list(Id) ++ " notification"
+    %%           ,pulish_notification(Id, PubFun)
+    %%           }
+    %%           || {Id, PubFun} <- [{teletype_voicemail_to_email:id(), fun kapi_notifications:publish_voicemail_new/1}
+    %%                              % ,{teletype_deregister:id(), fun kapi_notifications:publish_deregister/1}
+    %%                              ]
+    %%          ]
+    %%  end
+    %% }.
+    Pid = setup_test(),
+    _ = [{?LOG_DEBUG("Test publishing " ++ binary_to_list(Id) ++ " notification")
+         ,pulish_notification(Id, PubFun)
+         }
+         || {Id, PubFun} <- [{teletype_voicemail_to_email:id(), fun kapi_notifications:publish_voicemail_new/1}
+                            %% ,{teletype_deregister:id(), fun kapi_notifications:publish_deregister/1}
+                            ]
+        ],
+    teardown(Pid).
 
 setup_test() ->
     ?LOG_DEBUG("setting up test"),
@@ -47,7 +58,8 @@ pulish_notification(TemplateId, PubFun) ->
     TemplateIdStr = binary_to_list(TemplateId),
     Path = "notif__" ++ TemplateIdStr ++ ".json",
     {ok, Payload} = kz_json:fixture(?APP, Path),
-    ?_assertEqual(<<"completed">>, get_status(kapps_notify_publisher:call_collect(Payload, PubFun))).
+    %% ?_assertEqual(<<"completed">>, get_status(kapps_notify_publisher:call_collect(Payload, PubFun))).
+    get_status(kapps_notify_publisher:call_collect(Payload, PubFun)).
 
 get_status([]) -> 'false';
 get_status([JObj|_]) ->
@@ -84,8 +96,8 @@ meck_all() ->
     meck:new(kz_cache, [unstick, passthrough]),
     meck:expect(kz_cache, store_local, store_cache()),
 
-    % meck:new(teletype_util, [unstick, passthrough]),
-    % meck:expect(teletype_util, send_update, teletype_util_send_update()),
+    %% meck:new(teletype_util, [unstick, passthrough]),
+    %% meck:expect(teletype_util, send_update, teletype_util_send_update()),
 
     meck:new(gen_smtp_client, [unstick, passthrough]),
     meck:expect(gen_smtp_client, send, smtp_send()).
@@ -125,14 +137,14 @@ smtp_send() ->
             CallBack({ok, <<"Message accepted">>})
     end.
 
-% teletype_util_send_update() -> fun(_, <<"pending">>) -> ok end.
+%% teletype_util_send_update() -> fun(_, <<"pending">>) -> ok end.
 
 store_cache() ->
     fun(?CACHE_NAME, {receipt, "Message accepted"}, _, _) -> ok;
        (_CacheName, _, _, _) ->
             ?LOG_DEBUG("cache for ~s not implemented", [_CacheName])
-            % {_, ST} = erlang:process_info(self(), current_stacktrace),
-            % kz_util:log_stacktrace(ST)
+            %% {_, ST} = erlang:process_info(self(), current_stacktrace),
+            %% kz_util:log_stacktrace(ST)
     end.
 
 open_doc_2() -> fun(Db, Id) -> open_doc(Db, Id, []) end.
@@ -145,9 +157,9 @@ open_doc(Db, Id, _Options) ->
     case kz_json:fixture(?APP, Path) of
         {ok, _}=OK -> OK;
         {error, _} ->
-            % ?LOG_DEBUG(" tried ~s/~s~n", [Db, Id]),
-            % {_, ST} = erlang:process_info(self(), current_stacktrace),
-            % kz_util:log_stacktrace(ST),
+            %% ?LOG_DEBUG(" tried ~s/~s~n", [Db, Id]),
+            %% {_, ST} = erlang:process_info(self(), current_stacktrace),
+            %% kz_util:log_stacktrace(ST),
             {error, not_found}
     end.
 
@@ -182,8 +194,8 @@ get_results(Db, DbView, _Options) ->
     case kz_json:fixture(kazoo_documents, Path) of
         {ok, _}=OK -> OK;
         {error, _} ->
-            % ?LOG_DEBUG(" tried ~s/~s~n", [Db, DbView]),
-            % {_, ST} = erlang:process_info(self(), current_stacktrace),
-            % kz_util:log_stacktrace(ST),
+            %% ?LOG_DEBUG(" tried ~s/~s~n", [Db, DbView]),
+            %% {_, ST} = erlang:process_info(self(), current_stacktrace),
+            %% kz_util:log_stacktrace(ST),
             {error, not_found}
     end.
