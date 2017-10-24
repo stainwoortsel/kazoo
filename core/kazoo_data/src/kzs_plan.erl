@@ -285,7 +285,7 @@ fetch_cached_dataplan(Key, Fun) ->
     case kz_cache:fetch_local(?KAZOO_DATA_PLAN_CACHE, PT) of
         {'ok', Plan} -> Plan;
         {'error', 'not_found'} ->
-            lager:debug("creating new dataplan ~p", [Key]),
+            ?LOG_DEBUG("creating new dataplan ~p", [Key]),
             {Keys, PlanJObj} = Fun(Key),
             Plan = kz_json:to_map(PlanJObj),
             CacheProps = [{'origin', [{'db', ?KZ_DATA_DB, K } || K <- Keys]}

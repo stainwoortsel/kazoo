@@ -1,15 +1,15 @@
 %%%-------------------------------------------------------------------
-%%% @copyright (C) 2012-2017, 2600Hz, INC
+%%% @copyright (C) 2017, 2600Hz, INC
 %%% @doc
 %%%
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(kazoo_data_sup).
+-module(kazoo_fixtures_sup).
 
 -behaviour(supervisor).
 
--include("kz_data.hrl").
+-include("kz_fixtures.hrl").
 
 -define(SERVER, ?MODULE).
 
@@ -17,11 +17,7 @@
         ,init/1
         ]).
 
--define(CHILDREN, [?SUPER('kz_dataconnection_sup')
-                  ,?WORKER('kz_dataconnections')
-                  ,?WORKER('kazoo_data_bootstrap')
-                  ,?WORKER('kz_data_tracing')
-                  ]).
+-define(CHILDREN, []).
 
 %% ===================================================================
 %% API functions

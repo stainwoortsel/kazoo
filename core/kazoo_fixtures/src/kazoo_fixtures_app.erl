@@ -1,8 +1,15 @@
--module(kazoo_data_app).
+%%%-------------------------------------------------------------------
+%%% @copyright (C) 2017, 2600Hz, INC
+%%% @doc
+%%%
+%%% @end
+%%% @contributors
+%%%-------------------------------------------------------------------
+-module(kazoo_fixtures_app).
 
 -behaviour(application).
 
--include("kz_data.hrl").
+-include("kz_fixtures.hrl").
 
 %% Application callbacks
 -export([start/2, stop/1]).
@@ -10,13 +17,14 @@
 %% ===================================================================
 %% Application callbacks
 %% ===================================================================
+
 %%--------------------------------------------------------------------
 %% @public
 %% @doc Implement the application start behaviour
 %%--------------------------------------------------------------------
 -spec start(application:start_type(), any()) -> startapp_ret().
 start(_StartType, _StartArgs) ->
-    kazoo_cache_sup:start_link().
+    kazoo_fixtures_sup:start_link().
 
 %%--------------------------------------------------------------------
 %% @public
