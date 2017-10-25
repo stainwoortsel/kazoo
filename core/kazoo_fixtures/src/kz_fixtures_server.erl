@@ -29,7 +29,7 @@
 %%% Driver callbacks
 %%%===================================================================
 
--spec new_connection(map()) -> kz_data:connection().
+-spec new_connection(map()) -> {'ok', server_map()}.
 new_connection(Map) ->
     Url = code:priv_dir(kazoo_fixtures),
     {'ok', #{url => Url ++ "/fixture_dbs"
@@ -41,22 +41,22 @@ new_connection(Map) ->
 %%% Connection operations
 %%%===================================================================
 
--spec get_db(kz_data:connection(), ne_binary()) -> map().
+-spec get_db(server_map(), ne_binary()) -> map().
 get_db(Server, DbName) ->
     ConnToUse = maybe_use_app_connection(Server, DbName),
     #{server => ConnToUse, name => DbName}.
 
--spec server_url(kz_data:connection()) -> ne_binary().
+-spec server_url(server_map()) -> ne_binary().
 server_url(#{url := Url}) ->
     Url.
 
--spec db_url(kz_data:connection(), ne_binary()) -> ne_binary().
+-spec db_url(server_map(), ne_binary()) -> ne_binary().
 db_url(Server, DbName) ->
     #{url := Url} = maybe_use_app_connection(Server, DbName),
-    <<(iolist_to_binary(Url))/binary, "/", DbName/binary>>.
+    <<(kz_term:to_binary(Url))/binary, "/", DbName/binary>>.
 
 
--spec server_info(kz_data:connection()) -> doc_resp().
+-spec server_info(server_map()) -> doc_resp().
 server_info(_Server) ->
     {'ok', kz_json:from_list(
              [{<<"kazoo">>, <<"Willkommen">>}
@@ -70,7 +70,7 @@ server_info(_Server) ->
 %%% API
 %%%===================================================================
 
--spec get_app_connection(kz_data:connection()) -> kz_data:connection().
+-spec get_app_connection(server_map()) -> server_map().
 get_app_connection(#{options := Options}=Server) ->
     case maps:get(test_app, Options, 'unedfined') of
         'unedfined' -> Server;
@@ -78,7 +78,7 @@ get_app_connection(#{options := Options}=Server) ->
             set_app_connection(Server, AppName)
     end.
 
--spec maybe_use_app_connection(kz_data:connection(), ne_binary()) -> kz_data:connection().
+-spec maybe_use_app_connection(server_map(), ne_binary()) -> server_map().
 maybe_use_app_connection(#{options := Options}=Server, DbName) ->
     case {maps:get(test_app, Options, 'unedfined')
          ,maps:get(test_db, Options, 'unedfined')
@@ -99,7 +99,7 @@ maybe_use_app_connection(#{options := Options}=Server, DbName) ->
 %%% Internal functions
 %%%===================================================================
 
--spec set_app_connection(kz_data:connection(), atom()) -> kz_data:connection().
+-spec set_app_connection(server_map(), atom()) -> server_map().
 set_app_connection(#{options := Options}=Server, AppName) ->
     Path = case maps:get(test_db_subdir, Options, 'unedfined') of
                'unedfined' -> code:priv_dir(AppName);
