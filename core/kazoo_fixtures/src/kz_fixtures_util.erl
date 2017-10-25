@@ -43,7 +43,6 @@ open_json(Db, DocId) ->
 
 -spec doc_path(db_map(), ne_binary()) -> file:filename_all().
 doc_path(#{server := #{url := Url}, name := DbName}, DocId) ->
-    % ?LOG_DEBUG("~p ~p ~p", [kz_term:to_list(Url), kz_term:to_list(DbName),["docs/", kz_term:to_list(DocId), ".json"] ]),
     filename:join(kz_term:to_list(Url) ++ "/" ++ kz_term:to_list(DbName)
                  ,["docs/", kz_term:to_list(DocId), ".json"]
                  ).

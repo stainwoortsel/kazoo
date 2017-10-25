@@ -88,11 +88,13 @@ clean: clean-test
 clean-test: $(CLEAN_MOAR)
 	$(if $(wildcard test/$(PROJECT).app), rm test/$(PROJECT).app)
 
+TEST_CONFIG=$(ROOT)/rel/test-config.ini
+
 ## Use this one when debugging
 test: compile-test
-	ERL_LIBS=$(ELIBS) erl -noshell $(TEST_PA) -eval "case eunit:test([`echo ebin/*.beam | sed 's%\.beam ebin/%, %g;s%ebin/%%;s/\.beam//'`], [verbose]) of ok -> init:stop(); _ -> init:stop(1) end."
+	KAZOO_CONFIG=$(TEST_CONFIG) ERL_LIBS=$(ELIBS) erl -noshell $(TEST_PA) -eval "case eunit:test([`echo ebin/*.beam | sed 's%\.beam ebin/%, %g;s%ebin/%%;s/\.beam//'`], [verbose]) of ok -> init:stop(); _ -> init:stop(1) end."
 test.%: compile-test
-	ERL_LIBS=$(ELIBS) erl -noshell $(TEST_PA) -eval "case eunit:test([$*], [verbose]) of ok -> init:stop(); _ -> init:stop(1) end."
+	KAZOO_CONFIG=$(TEST_CONFIG) ERL_LIBS=$(ELIBS) erl -noshell $(TEST_PA) -eval "case eunit:test([$*], [verbose]) of ok -> init:stop(); _ -> init:stop(1) end."
 
 COVERDATA=$(PROJECT).coverdata
 COVER_REPORT_DIR=cover
@@ -100,7 +102,7 @@ COVER_REPORT_DIR=cover
 ## Use this one when CI
 eunit: compile-test
 	@mkdir -p $(COVER_REPORT_DIR)
-	ERL_LIBS=$(ELIBS) erl -noshell $(TEST_PA) -eval "_ = cover:start(), cover:compile_beam_directory(\"ebin\"), case eunit:test([`echo ebin/*.beam | sed 's%\.beam ebin/%, %g;s%ebin/%%;s/\.beam//'`], [verbose]) of ok -> cover:export(\"$(COVERDATA)\"), cover:analyse_to_file([html, {outdir, \"$(COVER_REPORT_DIR)\"}]), init:stop(); _ -> init:stop(1) end."
+	KAZOO_CONFIG=$(TEST_CONFIG) ERL_LIBS=$(ELIBS) erl -noshell $(TEST_PA) -eval "_ = cover:start(), cover:compile_beam_directory(\"ebin\"), case eunit:test([`echo ebin/*.beam | sed 's%\.beam ebin/%, %g;s%ebin/%%;s/\.beam//'`], [verbose]) of ok -> cover:export(\"$(COVERDATA)\"), cover:analyse_to_file([html, {outdir, \"$(COVER_REPORT_DIR)\"}]), init:stop(); _ -> init:stop(1) end."
 
 cover: $(ROOT)/make/cover.mk
 	COVER=1 $(MAKE) eunit
