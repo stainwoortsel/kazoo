@@ -19,7 +19,8 @@
                    }.
 
 -type fixture_errors() :: not_found | timeout |
-                          conflict | db_not_found.
+                          conflict | db_not_found |
+                          empty_doc_id.
 -type fixture_error() :: {error, fixture_errors()}.
 
 -type doc_resp() :: {ok, kz_json:object()} | fixture_error().

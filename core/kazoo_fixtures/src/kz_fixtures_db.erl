@@ -44,7 +44,7 @@ db_info(#{url := ServerUrl}=Server) ->
 -spec db_info(server_map(), ne_binary()) -> docs_resp().
 db_info(Server, DbName) ->
     case db_exists(Server, DbName) of
-    	'false' -> {'error', 'db_not_found'};
+    	'false' -> {'error', 'not_found'};
     	'true' -> {'ok', kz_json:from_list([{<<"db_name">>, DbName}])}
     end.
 
