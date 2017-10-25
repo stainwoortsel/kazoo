@@ -16,7 +16,7 @@
 %%--------------------------------------------------------------------
 -spec start(application:start_type(), any()) -> startapp_ret().
 start(_StartType, _StartArgs) ->
-    kazoo_cache_sup:start_link().
+    kazoo_data_sup:start_link().
 
 %%--------------------------------------------------------------------
 %% @public
