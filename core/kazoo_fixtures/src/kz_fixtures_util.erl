@@ -43,7 +43,8 @@ open_json(Db, DocId) ->
 
 -spec doc_path(db_map(), ne_binary()) -> file:filename_all().
 doc_path(#{server := #{url := Url}, name := DbName}, DocId) ->
-    filename:join(kz_term:to_list(Url) ++ kz_term:to_list(DbName)
+    % ?LOG_DEBUG("~p ~p ~p", [kz_term:to_list(Url), kz_term:to_list(DbName),["docs/", kz_term:to_list(DocId), ".json"] ]),
+    filename:join(kz_term:to_list(Url) ++ "/" ++ kz_term:to_list(DbName)
                  ,["docs/", kz_term:to_list(DocId), ".json"]
                  ).
 
@@ -54,7 +55,7 @@ open_attachment(Db, DocId, AName) ->
 -spec att_path(db_map(), ne_binary(), ne_binary()) -> file:filename_all().
 att_path(#{server := #{url := Url}, name := DbName}, DocId, AName) ->
     AttName = kz_http_util:urlencode(AName),
-    filename:join(kz_term:to_list(Url) ++ kz_term:to_list(DbName)
+    filename:join(kz_term:to_list(Url) ++ "/" ++ kz_term:to_list(DbName)
                  ,["docs/", kz_term:to_list(DocId), AttName]
                  ).
 
