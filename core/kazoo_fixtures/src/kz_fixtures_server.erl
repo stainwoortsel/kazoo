@@ -60,7 +60,7 @@ db_url(Server, DbName) ->
 server_info(_Server) ->
     {'ok', kz_json:from_list(
              [{<<"kazoo">>, <<"Willkommen">>}
-             ,{<<"version">>, <<"0.0.0.0.0.0.0.1α">>}
+             ,{<<"version">>, <<"0.0.0.0.0.0.0.1">>}
              ,{<<"features">>, [<<"cool">>]}
              ,{<<"vendor">>, kz_json:from_list([{<<"name">>, <<"the Great FixtureDB Committee">>}])}
              ])
