@@ -71,7 +71,7 @@ prepare_att_doc({ok, Doc}, AName, Contents, Options) ->
                }]
              }
             ]),
-    NewAtt = kz_json:merge(kz_json:get_json(<<"_attachments">>, JObj, kz_json:new()), Att),
+    NewAtt = kz_json:merge(kz_json:get_json_value(<<"_attachments">>, JObj, kz_json:new()), Att),
     {ok, kz_json:set_value(<<"_attachments">>, NewAtt, JObj)};
 prepare_att_doc({error, _}=Error, _, _, _) ->
     Error.

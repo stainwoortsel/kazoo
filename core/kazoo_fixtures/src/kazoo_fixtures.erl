@@ -100,7 +100,7 @@ db_create(Server, DbName, Options) ->
 
 -spec db_delete(server_map(), ne_binary()) -> boolean().
 db_delete(Server, DbName) ->
-    kz_fixtures_db:db_create(Server, DbName).
+    kz_fixtures_db:db_delete(Server, DbName).
 
 -spec db_view_cleanup(server_map(), ne_binary()) -> boolean().
 db_view_cleanup(Server, DbName) ->
