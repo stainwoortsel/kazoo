@@ -33,18 +33,15 @@ compile-test: ERLC_OPTS += +nowarn_missing_spec
 compile-test: deps $(KAZOODIRS)
 
 eunit: ACTION = eunit
-eunit: export KAZOO_CONFIG = $(ROOT)/rel/test-config.ini
 eunit: $(KAZOODIRS)
 
 proper: ACTION = eunit
 proper: ERLC_OPTS += -DPROPER
-proper: export KAZOO_CONFIG = $(ROOT)/rel/test-config.ini
 proper: $(KAZOODIRS)
 
 test: ACTION = test
 test: ERLC_OPTS += -DPROPER
 test: ERLC_OPTS += +nowarn_missing_spec
-test: export KAZOO_CONFIG = $(ROOT)/rel/test-config.ini
 test: $(KAZOODIRS)
 
 coverage-report:
