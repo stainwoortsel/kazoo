@@ -5,7 +5,7 @@
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(kazoo_data_sup).
+-module(kazoo_data_link_sup).
 
 -behaviour(supervisor).
 
@@ -17,21 +17,9 @@
         ,init/1
         ]).
 
--define(ORIGIN_BINDINGS, [[]
-                         ]).
-
--define(CACHE_PROPS, [{'origin_bindings', ?ORIGIN_BINDINGS}
-                     ]).
-
--define(DP_ORIGIN_BINDINGS, [[{'db', ?KZ_DATA_DB}]]).
--define(DP_CACHE_PROPS, [{'origin_bindings', ?DP_ORIGIN_BINDINGS}]).
-
--define(CHILDREN, [?WORKER('kazoo_data_init')
-                  ,?CACHE_ARGS(?CACHE_NAME, ?CACHE_PROPS)
-                  ,?CACHE_ARGS(?KAZOO_DATA_PLAN_CACHE, ?DP_CACHE_PROPS)
-                  ,?SUPER('kazoo_data_link_sup')
-                  ,?WORKER('kz_data_tracing')
-                  ,?WORKER('kz_data_maint_listener')
+-define(CHILDREN, [?SUPER('kz_dataconnection_sup')
+                  ,?WORKER('kz_dataconnections')
+                  ,?WORKER('kazoo_data_bootstrap')
                   ]).
 
 %% ===================================================================
