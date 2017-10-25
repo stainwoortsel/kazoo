@@ -44,8 +44,8 @@ db_info(#{url := ServerUrl}=Server) ->
 -spec db_info(server_map(), ne_binary()) -> docs_resp().
 db_info(Server, DbName) ->
     case db_exists(Server, DbName) of
-    	'false' -> {'error', 'not_found'};
-    	'true' -> {'ok', kz_json:from_list([{<<"db_name">>, DbName}])}
+        'false' -> {'error', 'not_found'};
+        'true' -> {'ok', kz_json:from_list([{<<"db_name">>, DbName}])}
     end.
 
 -spec db_exists(server_map(), ne_binary()) -> boolean().
@@ -67,12 +67,12 @@ db_list(Server, _Options) ->
 
 -spec get_dbs_list(ne_binary(), ne_binary()) -> ne_binaries().
 get_dbs_list(ServerUrl, ServerUrl) ->
-	[kz_term:to_binary(Db) || Db <- get_dbs_list(ServerUrl)];
+    [kz_term:to_binary(Db) || Db <- get_dbs_list(ServerUrl)];
 get_dbs_list(ServerUrl, AppUrl) ->
-	lists:usort([kz_term:to_binary(Db)
-				 || Db <- get_dbs_list(ServerUrl) ++ get_dbs_list(AppUrl)
-				]).
+    lists:usort([kz_term:to_binary(Db)
+                 || Db <- get_dbs_list(ServerUrl) ++ get_dbs_list(AppUrl)
+                ]).
 
 -spec get_dbs_list(ne_binary()) -> ne_binaries().
 get_dbs_list(Url) ->
-	filelib:wildcard(kz_term:to_list(Url) ++ "/*").
+    filelib:wildcard(kz_term:to_list(Url) ++ "/*").

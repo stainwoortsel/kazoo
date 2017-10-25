@@ -621,14 +621,15 @@ try_load_module(Name) ->
 %% dictionary, failing that the Msg-ID and finally a generic
 %% @end
 %%--------------------------------------------------------------------
--spec put_callid(kz_json:object() | kz_proplist() | ne_binary() | atom()) ->
-                        api_binary().
+-spec put_callid(kz_json:object() | kz_proplist() | ne_binary() | atom()) -> 'ok'.
 put_callid(?NE_BINARY = CallId) ->
-    lager:md([{'callid', CallId}]),
-    erlang:put('callid', CallId);
+    _ = lager:md([{'callid', CallId}]),
+    _ = erlang:put('callid', CallId),
+    'ok';
 put_callid(Atom) when is_atom(Atom) ->
-    lager:md([{'callid', Atom}]),
-    erlang:put('callid', Atom);
+    _ = lager:md([{'callid', Atom}]),
+    _ = erlang:put('callid', Atom),
+    'ok';
 put_callid(APITerm) ->
     put_callid(find_callid(APITerm)).
 

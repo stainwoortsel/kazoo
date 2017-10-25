@@ -303,5 +303,5 @@ get_startegy_hierarchy_merge() ->
 
 
 get_fixture_value(Key, Fixture) ->
-    {ok, JObj} = kz_json:fixture(?APP, "fixture" ++ Fixture ++ ".json"),
+    {ok, JObj} = kz_json:fixture(?APP, "fixture/" ++ Fixture ++ ".json"),
     kz_json:get_value(Key, JObj).
