@@ -5,11 +5,11 @@
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(kazoo_fixtures_app).
+-module(kazoo_fixturedb_app).
 
 -behaviour(application).
 
--include("kz_fixtures.hrl").
+-include("kz_fixturedb.hrl").
 
 %% Application callbacks
 -export([start/2, stop/1]).
@@ -24,7 +24,7 @@
 %%--------------------------------------------------------------------
 -spec start(application:start_type(), any()) -> startapp_ret().
 start(_StartType, _StartArgs) ->
-    kazoo_fixtures_sup:start_link().
+    kazoo_fixturedb_sup:start_link().
 
 %%--------------------------------------------------------------------
 %% @public

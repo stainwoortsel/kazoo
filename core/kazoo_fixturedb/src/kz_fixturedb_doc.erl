@@ -5,7 +5,7 @@
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(kz_fixtures_doc).
+-module(kz_fixturedb_doc).
 
 %% Document operations
 -export([open_doc/4
@@ -17,7 +17,7 @@
         ,ensure_saved/4
         ]).
 
--include("kz_fixtures.hrl").
+-include("kz_fixturedb.hrl").
 
 %%%===================================================================
 %%% Document operations
@@ -25,10 +25,10 @@
 
 -spec open_doc(server_map(), ne_binary(), ne_binary(), kz_data:options()) -> doc_resp().
 open_doc(Server, DbName, DocId, _Options) ->
-    Db = kz_fixtures_server:get_db(Server, DbName),
+    Db = kz_fixturedb_server:get_db(Server, DbName),
     case kz_term:is_empty(DocId) of
         'true' -> {'error', 'empty_doc_id'};
-        'false' -> kz_fixtures_util:open_json(Db, DocId)
+        'false' -> kz_fixturedb_util:open_json(Db, DocId)
     end.
 
 -spec lookup_doc_rev(server_map(), ne_binary(), ne_binary()) -> {ok, ne_binary()} | fixture_error().
@@ -47,21 +47,21 @@ save_doc(Server, DbName, Doc, Options) ->
             DocRev = kz_doc:revision(Doc),
             JObjRev = kz_doc:revision(JObj),
             case {DocRev, JObjRev} of
-                {'undefined', _} -> kz_fixtures_util:update_revision(kz_doc:set_revision(Doc, JObjRev));
-                {_, 'undefined'} -> kz_fixtures_util:update_revision(Doc);
-                {DocRev, JObjRev} -> kz_fixtures_util:update_revision(Doc);
+                {'undefined', _} -> kz_fixturedb_util:update_revision(kz_doc:set_revision(Doc, JObjRev));
+                {_, 'undefined'} -> kz_fixturedb_util:update_revision(Doc);
+                {DocRev, JObjRev} -> kz_fixturedb_util:update_revision(Doc);
                 {_, _} -> {'error', 'conflict'}
             end;
         {'error', _} ->
-            case kz_fixtures_db:db_exists(Server, DbName) of
+            case kz_fixturedb_db:db_exists(Server, DbName) of
                 'false' -> {'error', 'not_found'};
-                'true' -> {'ok', kz_fixtures_util:update_revision(Doc)}
+                'true' -> {'ok', kz_fixturedb_util:update_revision(Doc)}
             end
     end.
 
 -spec save_docs(server_map(), ne_binary(), kz_data:documents(), kz_data:options()) -> docs_resp().
 save_docs(Server, DbName, Docs, Options) ->
-    case kz_fixtures_db:db_exists(Server, DbName) of
+    case kz_fixturedb_db:db_exists(Server, DbName) of
         'false' -> {'error', 'not_found'};
         'true' ->
             {'ok', [perform_save_docs(Server, DbName, Doc, Options) || Doc <- Docs]}

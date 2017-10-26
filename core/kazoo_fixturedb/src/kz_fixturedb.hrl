@@ -1,4 +1,4 @@
--ifndef(KZ_FIXTURES_HRL).
+-ifndef(KZ_FIXTUREDB_HRL).
 
 -include_lib("kazoo_stdlib/include/kz_types.hrl").
 -include_lib("kazoo_stdlib/include/kz_log.hrl").
@@ -31,5 +31,5 @@
                              ,reduce, list
                              ]).
 
--define(KZ_FIXTURES_HRL, 'true').
+-define(KZ_FIXTUREDB_HRL, 'true').
 -endif.

@@ -5,7 +5,7 @@
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(kz_fixtures_util).
+-module(kz_fixturedb_util).
 
 %% Driver callbacks
 -export([format_error/1
@@ -23,7 +23,7 @@
         ,encode_query_filename/2
         ]).
 
--include("kz_fixtures.hrl").
+-include("kz_fixturedb.hrl").
 
 %%%===================================================================
 %%% Driver callbacks

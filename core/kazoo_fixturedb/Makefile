@@ -1,5 +1,5 @@
 ROOT = ../..
-PROJECT = kazoo_fixtures
+PROJECT = kazoo_fixturedb
 
 all: compile
 

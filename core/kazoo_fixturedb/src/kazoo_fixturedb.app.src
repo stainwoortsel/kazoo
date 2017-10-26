@@ -1,4 +1,4 @@
-{application, kazoo_fixtures,
+{application, kazoo_fixturedb,
  [
   {description, "A naive simple file-based CouchDB little bro"}
  ,{vsn, "4.0.0"}
@@ -8,5 +8,5 @@
                  , crypto
                  , public_key
                  ]}
- ,{mod, {kazoo_fixtures_app, []}}
+ ,{mod, {kazoo_fixturedb_app, []}}
  ]}.
