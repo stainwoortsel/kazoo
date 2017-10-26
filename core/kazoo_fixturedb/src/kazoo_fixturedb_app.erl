@@ -12,7 +12,12 @@
 -include("kz_fixturedb.hrl").
 
 %% Application callbacks
--export([start/2, stop/1]).
+-export([start/0, start/2, stop/1]).
+
+-spec start() -> {'ok', pid()}.
+start() ->
+    {ok, _} -> application:ensure_all_started(kazoo_config),
+    kazoo_data_link_sup:start_link().
 
 %% ===================================================================
 %% Application callbacks
