@@ -1,6 +1,6 @@
 ## Kazoo Makefile targets
 
-.PHONY: compile json compile-test clean clean-test eunit dialyze xref proper
+.PHONY: compile json compile-test clean clean-test eunit dialyze xref proper fixture_shell
 
 ## Platform detection.
 ifeq ($(PLATFORM),)
@@ -147,3 +147,9 @@ perf: ERLC_OPTS += -pa $(ROOT)/deps/horse/ebin -DPERF +'{parse_transform, horse_
 perf: compile-test
 	$(gen_verbose) @ERL_LIBS=$(ELIBS) erl -noshell  -pa $(ROOT)/deps/horse/ebin -pa $(TEST_PA) \
 		-eval 'horse:app_perf($(PROJECT)), init:stop().'
+
+fixture_shell: ERL_CRASH_DUMP = "$(ROOT)/$(shell date +%s)_ecallmgr_erl_crash.dump"
+fixture_shell: ERL_LIBS = "$(ROOT)/deps:$(ROOT)/core:$(ROOT)/applications:$(shell echo $(ROOT)/deps/rabbitmq_erlang_client-*/deps)"
+fixture_shell:
+	@ERL_CRASH_DUMP="$(ERL_CRASH_DUMP)" ERL_LIBS="$(ERL_LIBS)" KAZOO_CONFIG=$(ROOT)/rel/config-test.ini \
+		erl -name fixturedb -s reloader -s kazoo_fixturedb_app "$$@"
