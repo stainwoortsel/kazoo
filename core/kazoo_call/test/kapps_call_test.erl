@@ -22,30 +22,29 @@
                   ,fun(C) -> kapps_call:kvs_store(<<"kvs_key_2">>, kz_json:from_list([{<<"sub_key_1">>, <<"sub_value_1">>}]), C) end
                   ]).
 
-callflow_route_request_test_() ->
-    {ok,RouteReq} = kz_json:fixture(?APP, "fixtures/route_req/inbound-onnet-callflow.json"),
-    'true' = kapi_route:req_v(RouteReq),
+route_test_() ->
+    {setup
+    ,fun setup_db/0
+    ,fun terminate_db/1
+    ,fun(_ReturnOfSetup) ->
+             [test_callflow_route_request()
+             ,test_trunkstore_route_request()
+             ,test_callflow_route_win()
+             ,test_trunkstore_route_win()
+             ]
+     end
+    }.
+
+ensure_call_id_binary_test_() ->
+    RouteReq = kz_json:set_value(<<"Call-ID">>
+                                ,'atom'
+                                ,inbound_onnet_callflow_req()
+                                ),
     Call = kapps_call:from_route_req(RouteReq),
-    validate_kapps_call_basic(Call) ++ validate_kapps_call_callflow_req(Call).
-
-trunkstore_route_request_test_() ->
-    {ok,RouteReq} = kz_json:fixture(?APP, "fixtures/route_req/inbound-onnet-trunkstore.json"),
-    'true' = kapi_route:req_v(RouteReq),
-    Call = kapps_call:from_route_req(RouteReq),
-    validate_kapps_call_basic(Call) ++ validate_kapps_call_trunkstore_req(Call).
-
-callflow_route_win_test_() ->
-    Call = create_callflow_call(),
-    validate_kapps_call_basic(Call) ++ validate_kapps_call_callflow_win(Call).
-
-trunkstore_route_win_test_() ->
-    Call = create_trunkstore_call(),
-    validate_kapps_call_basic(Call) ++ validate_kapps_call_trunkstore_win(Call).
-
-encode_decode_test() ->
-    Call = kapps_call:exec(?UPDATERS, create_callflow_call()),
-    Call1 = kapps_call:from_json(kapps_call:to_json(Call)),
-    ?assert(kapps_call:eq(Call, Call1)).
+    [{"verify that the call id is always returned as a binary"
+     ,?_assertEqual(<<"atom">>, kapps_call:call_id(Call))
+     }
+    ].
 
 ensure_prepend_cid_name_kvs_test_() ->
     RouteReq = kz_json:set_value(<<"Prepend-CID-Name">>
@@ -58,16 +57,68 @@ ensure_prepend_cid_name_kvs_test_() ->
      }
     ].
 
-ensure_call_id_binary_test_() ->
-    RouteReq = kz_json:set_value(<<"Call-ID">>
-                                ,'atom'
-                                ,inbound_onnet_callflow_req()
-                                ),
-    Call = kapps_call:from_route_req(RouteReq),
-    [{"verify that the call id is always returned as a binary"
-     ,?_assertEqual(<<"atom">>, kapps_call:call_id(Call))
-     }
+updateable_test_() ->
+    %% {CCVsToSend, ExistingCCVs, NewCCVs}
+    Tests = [{[], [], []}
+
+            ,{[], [{k, v}], []}
+            ,{[{k, v}], [], [{k, v}]}
+            ,{[], [{k, v}], [{k, v}]}
+            ,{[{k, v1}], [{k, v}], [{k, v1}]}
+
+            ,{[], [{k0, v0}, {k1, v1}], []}
+            ,{[], [{k0, v0}, {k1, v1}], [{k0, v0}, {k1, v1}]}
+
+            ,{[{k0, v0}, {k1, v1}], [], [{k0, v0}, {k1, v1}]}
+            ,{[{k0, v9}], [{k0, v0}, {k1, v1}], [{k0, v9}]}
+            ,{[{k1, v9}], [{k0, v0}, {k1, v1}], [{k1, v9}]}
+            ,{[{k0, v9}, {k1, v9}], [{k0, v0}, {k1, v1}], [{k0, v9}, {k1, v9}]}
+            ],
+    [?_assertEqual(ToSend, kapps_call:updateable_ccvs(New, Existing))
+     || {ToSend, Existing, New} <- Tests
     ].
+
+setup_db() ->
+    {ok, _} = application:ensure_all_started(kazoo_config),
+    {ok, Pid} = kazoo_data_link_sup:start_link(),
+    Pid.
+
+terminate_db(Pid) ->
+  exit(Pid, shutdown),
+  Ref = monitor(process, Pid),
+  receive
+      {'DOWN', Ref, process, Pid, _Reason} ->
+          ok = application:stop(kazoo_config),
+          ok
+  after 1000 ->
+          ok = application:stop(kazoo_config),
+          error(exit_timeout)
+  end.
+
+test_callflow_route_request() ->
+    {ok,RouteReq} = kz_json:fixture(?APP, "fixtures/route_req/inbound-onnet-callflow.json"),
+    'true' = kapi_route:req_v(RouteReq),
+    Call = kapps_call:from_route_req(RouteReq),
+    validate_kapps_call_basic(Call) ++ validate_kapps_call_callflow_req(Call).
+
+test_trunkstore_route_request() ->
+    {ok,RouteReq} = kz_json:fixture(?APP, "fixtures/route_req/inbound-onnet-trunkstore.json"),
+    'true' = kapi_route:req_v(RouteReq),
+    Call = kapps_call:from_route_req(RouteReq),
+    validate_kapps_call_basic(Call) ++ validate_kapps_call_trunkstore_req(Call).
+
+test_callflow_route_win() ->
+    Call = create_callflow_call(),
+    validate_kapps_call_basic(Call) ++ validate_kapps_call_callflow_win(Call).
+
+test_trunkstore_route_win() ->
+    Call = create_trunkstore_call(),
+    validate_kapps_call_basic(Call) ++ validate_kapps_call_trunkstore_win(Call).
+
+encode_decode_test() ->
+    Call = kapps_call:exec(?UPDATERS, create_callflow_call()),
+    Call1 = kapps_call:from_json(kapps_call:to_json(Call)),
+    ?assert(kapps_call:eq(Call, Call1)).
 
 validate_kapps_call_basic(Call) ->
     [{"verify the caller id name is the expected value"
@@ -290,24 +341,3 @@ inbound_onnet_trunkstore_win() ->
     {ok,RouteWin} = kz_json:fixture(?APP, "fixtures/route_win/inbound-onnet-trunkstore.json"),
     'true' = kapi_route:win_v(RouteWin),
     RouteWin.
-
-updateable_test_() ->
-    %% {CCVsToSend, ExistingCCVs, NewCCVs}
-    Tests = [{[], [], []}
-
-            ,{[], [{k, v}], []}
-            ,{[{k, v}], [], [{k, v}]}
-            ,{[], [{k, v}], [{k, v}]}
-            ,{[{k, v1}], [{k, v}], [{k, v1}]}
-
-            ,{[], [{k0, v0}, {k1, v1}], []}
-            ,{[], [{k0, v0}, {k1, v1}], [{k0, v0}, {k1, v1}]}
-
-            ,{[{k0, v0}, {k1, v1}], [], [{k0, v0}, {k1, v1}]}
-            ,{[{k0, v9}], [{k0, v0}, {k1, v1}], [{k0, v9}]}
-            ,{[{k1, v9}], [{k0, v0}, {k1, v1}], [{k1, v9}]}
-            ,{[{k0, v9}, {k1, v9}], [{k0, v0}, {k1, v1}], [{k0, v9}, {k1, v9}]}
-            ],
-    [?_assertEqual(ToSend, kapps_call:updateable_ccvs(New, Existing))
-     || {ToSend, Existing, New} <- Tests
-    ].

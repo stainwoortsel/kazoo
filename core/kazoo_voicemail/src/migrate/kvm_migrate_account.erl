@@ -176,7 +176,7 @@ bulk_save_modb(Db, Js, _Acc) ->
         {'error', R} ->
             update_stats(?FAILED, Js, R),
             ?SUP_LOG_ERROR("    [~s] failed to migrate voicemail messages to db ~s: ~p"
-                  ,[kz_util:format_account_id(Db), Db, R])
+                          ,[kz_util:format_account_id(Db), Db, R])
     end.
 
 %%--------------------------------------------------------------------

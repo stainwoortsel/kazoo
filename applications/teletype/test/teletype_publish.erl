@@ -31,7 +31,7 @@ publish() ->
          ,pulish_notification(Id, PubFun)
          }
          || {Id, PubFun} <- [{teletype_voicemail_to_email:id(), fun kapi_notifications:publish_voicemail_new/1}
-                            %% ,{teletype_deregister:id(), fun kapi_notifications:publish_deregister/1}
+                             %% ,{teletype_deregister:id(), fun kapi_notifications:publish_deregister/1}
                             ]
         ],
     teardown(Pid).
@@ -104,15 +104,15 @@ meck_all() ->
 
 kz_amqp_worker_call_collect() ->
     fun(Req, PublishFun, _, Timeout) ->
-        ?LOG_DEBUG("publishing notification"),
-        PublishFun(Req),
-        receive
-            {ok, _}=OK -> OK;
-            {error, _}=Error -> Error
-        after Timeout ->
-            ?LOG_DEBUG("timeout"),
-            {timeout, kz_json:new()}
-        end
+            ?LOG_DEBUG("publishing notification"),
+            PublishFun(Req),
+            receive
+                {ok, _}=OK -> OK;
+                {error, _}=Error -> Error
+            after Timeout ->
+                    ?LOG_DEBUG("timeout"),
+                    {timeout, kz_json:new()}
+            end
     end.
 
 kz_amqp_worker_cast() ->
@@ -128,7 +128,7 @@ amqp_util_targeted_publish() ->
 
 amqp_util_notifications_publish() ->
     fun(_, Payload, _) ->
-        teletype_bindings:notification(kz_json:decode(Payload))
+            teletype_bindings:notification(kz_json:decode(Payload))
     end.
 
 smtp_send() ->

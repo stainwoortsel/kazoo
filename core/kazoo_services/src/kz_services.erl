@@ -276,16 +276,16 @@ fetch_services_doc(?WRONG_ACCOUNT_ID, _NotFromCache)
     {error, wrong};
 fetch_services_doc(<<"009afc511c97b2ae693c6cc4920988e8">>, _NotFromCache)
   when is_boolean(_NotFromCache); _NotFromCache =:= cache_failures ->
-  {ok, ServicesJObj0} = kz_json:fixture(?APP, "a_sub_services.json"),
-  {ok
-  ,kz_json:set_values([{<<"_id">>, <<"009afc511c97b2ae693c6cc4920988e8">>}
-                      ,{<<"billing_id">>, <<"009afc511c97b2ae693c6cc4920988e8">>}
-                      ,{<<"pvt_account_id">>, <<"009afc511c97b2ae693c6cc4920988e8">>}
-                      ,{<<"pvt_account_db">>, kz_util:format_account_db(<<"009afc511c97b2ae693c6cc4920988e8">>)}
-                      ,{<<"pvt_reseller_id">>, <<"6b71cb72c876b5b1396a335f8f8a2594">>}
-                      ,{<<"pvt_tree">>, [<<"6b71cb72c876b5b1396a335f8f8a2594">>]}
-                      ], ServicesJObj0)
-  }.
+    {ok, ServicesJObj0} = kz_json:fixture(?APP, "a_sub_services.json"),
+    {ok
+    ,kz_json:set_values([{<<"_id">>, <<"009afc511c97b2ae693c6cc4920988e8">>}
+                        ,{<<"billing_id">>, <<"009afc511c97b2ae693c6cc4920988e8">>}
+                        ,{<<"pvt_account_id">>, <<"009afc511c97b2ae693c6cc4920988e8">>}
+                        ,{<<"pvt_account_db">>, kz_util:format_account_db(<<"009afc511c97b2ae693c6cc4920988e8">>)}
+                        ,{<<"pvt_reseller_id">>, <<"6b71cb72c876b5b1396a335f8f8a2594">>}
+                        ,{<<"pvt_tree">>, [<<"6b71cb72c876b5b1396a335f8f8a2594">>]}
+                        ], ServicesJObj0)
+    }.
 -else.
 fetch_services_doc(?MATCH_ACCOUNT_RAW(AccountId), cache_failures=Option) ->
     kz_datamgr:open_cache_doc(?KZ_SERVICES_DB, AccountId, [Option]);

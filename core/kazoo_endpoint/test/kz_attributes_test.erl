@@ -41,16 +41,16 @@ setup_db() ->
     Pid.
 
 terminate_db(Pid) ->
-  exit(Pid, shutdown),
-  Ref = monitor(process, Pid),
-  receive
-      {'DOWN', Ref, process, Pid, _Reason} ->
-          ok = application:stop(kazoo_config),
-          ok
-  after 1000 ->
-          ok = application:stop(kazoo_config),
-          error(exit_timeout)
-  end.
+    exit(Pid, shutdown),
+    Ref = monitor(process, Pid),
+    receive
+        {'DOWN', Ref, process, Pid, _Reason} ->
+            ok = application:stop(kazoo_config),
+            ok
+    after 1000 ->
+            ok = application:stop(kazoo_config),
+            error(exit_timeout)
+    end.
 
 
 test_get_flags_callflow() ->
