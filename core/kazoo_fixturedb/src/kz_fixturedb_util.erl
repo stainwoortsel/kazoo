@@ -42,7 +42,7 @@ format_error(Other) -> Other.
 
 -spec open_json(db_map(), ne_binary()) -> doc_resp().
 open_json(Db, DocId) ->
-    read_json(doc_path(Db, DocId)).
+    kz_json:fixture(doc_path(Db, DocId)).
 
 -spec doc_path(db_map(), ne_binary()) -> file:filename_all().
 doc_path(#{server := #{url := Url}, name := DbName}, DocId) ->
@@ -63,7 +63,7 @@ att_path(#{server := #{url := Url}, name := DbName}, DocId, AName) ->
 
 -spec open_view(db_map(), ne_binary(), kz_data:options()) -> docs_resp().
 open_view(Db, Design, Options) ->
-    read_json(view_path(Db, Design, Options)).
+    kz_json:fixture(view_path(Db, Design, Options)).
 
 -spec view_path(db_map(), ne_binary(), kz_data:options()) -> file:filename_all().
 view_path(#{server := #{url := Url}, name := DbName}, Design, Options) ->
@@ -100,13 +100,6 @@ update_revision(JObj) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-
--spec read_json(file:filename_all()) -> {ok, kz_json:object()} | {error, not_found}.
-read_json(Path) ->
-    case read_file(Path) of
-        {ok, Bin} -> {ok, kz_json:decode(Bin)};
-        {error, _} -> {error, not_found}
-    end.
 
 -spec read_file(file:filename_all()) -> {ok, binary()} | {error, not_found}.
 read_file(Path) ->
