@@ -26,5 +26,10 @@
 -type doc_resp() :: {ok, kz_json:object()} | fixture_error().
 -type docs_resp() :: {ok, kz_json:objects()} | fixture_error().
 
+-define(DANGEROUS_VIEW_OPTS, [startkey, endkey, key
+                             ,keys, group, group_level
+                             ,reduce, list
+                             ]).
+
 -define(KZ_FIXTURES_HRL, 'true').
 -endif.
