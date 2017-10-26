@@ -38,18 +38,16 @@ lookup_doc_rev(Server, DbName, DocId) ->
         {'error', _}=Error -> Error
     end.
 
--spec save_doc(server_map(), ne_binary(), kz_data:document() | kz_data:documents(), kz_data:options()) -> doc_resp().
-save_doc(Server, DbName, Docs, Options) when is_list(Docs) ->
-    save_docs(Server, DbName, Docs, Options);
-save_doc(Server, DbName, Doc, Options) ->
+-spec save_doc(server_map(), ne_binary(), kz_data:document(), kz_data:options()) -> doc_resp().
+save_doc(Server, DbName, Doc, Options) when not is_list(Doc) ->
     case open_doc(Server, DbName, Doc, Options) of
         {'ok', JObj} ->
             DocRev = kz_doc:revision(Doc),
             JObjRev = kz_doc:revision(JObj),
             case {DocRev, JObjRev} of
-                {'undefined', _} -> kz_fixturedb_util:update_revision(kz_doc:set_revision(Doc, JObjRev));
-                {_, 'undefined'} -> kz_fixturedb_util:update_revision(Doc);
-                {DocRev, JObjRev} -> kz_fixturedb_util:update_revision(Doc);
+                {'undefined', _} -> {'ok', kz_fixturedb_util:update_revision(kz_doc:set_revision(Doc, JObjRev))};
+                {_, 'undefined'} -> {'ok', kz_fixturedb_util:update_revision(Doc)};
+                {DocRev, JObjRev} -> {'ok', kz_fixturedb_util:update_revision(Doc)};
                 {_, _} -> {'error', 'conflict'}
             end;
         {'error', _} ->
@@ -64,16 +62,16 @@ save_docs(Server, DbName, Docs, Options) ->
     case kz_fixturedb_db:db_exists(Server, DbName) of
         'false' -> {'error', 'not_found'};
         'true' ->
-            {'ok', [perform_save_docs(Server, DbName, Doc, Options) || Doc <- Docs]}
+            {'ok', [perform_save_doc(Server, DbName, Doc, Options) || Doc <- Docs]}
     end.
 
--spec del_doc(server_map(), ne_binary(), kz_data:document(), kz_data:options()) -> doc_resp().
+-spec del_doc(server_map(), ne_binary(), kz_data:document(), kz_data:options()) -> {'ok', kz_json:objects()}.
 del_doc(Server, DbName, Doc, Options) ->
     del_docs(Server, DbName, [Doc], Options).
 
--spec del_docs(server_map(), ne_binary(), kz_data:documents(), kz_data:options()) -> docs_resp().
+-spec del_docs(server_map(), ne_binary(), kz_data:documents(), kz_data:options()) -> {'ok', kz_json:objects()}.
 del_docs(Server, DbName, Docs, Options) ->
-    [perform_save_docs(Server, DbName, Doc, Options) || Doc <- Docs].
+    {'ok', [perform_save_doc(Server, DbName, Doc, Options) || Doc <- Docs]}.
 
 -spec ensure_saved(server_map(), ne_binary(), kz_data:document(), kz_data:options()) -> doc_resp().
 ensure_saved(Server, DbName, Doc, Options) ->
@@ -91,8 +89,8 @@ ensure_saved(Server, DbName, Doc, Options) ->
 %%% Internal functions
 %%%===================================================================
 
--spec perform_save_docs(server_map(), ne_binary(), kz_data:document(), kz_data:options()) -> kz_json:objects().
-perform_save_docs(Server, DbName, JObj, Options) ->
+-spec perform_save_doc(server_map(), ne_binary(), kz_json:object(), kz_data:options()) -> kz_json:objects().
+perform_save_doc(Server, DbName, JObj, Options) ->
     prepare_bulk_save_response(save_doc(Server, DbName, JObj, Options), JObj).
 
 -spec prepare_bulk_save_response(doc_resp(), kz_json:object()) -> kz_json:object().
