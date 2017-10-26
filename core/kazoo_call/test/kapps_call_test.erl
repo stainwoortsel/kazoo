@@ -12,6 +12,8 @@
         ]).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("kazoo_stdlib/include/kz_types.hrl").
+
 -define(APP, kazoo_call).
 
 -define(UPDATERS, [fun(C) -> kapps_call:set_custom_channel_var(<<"key1">>, <<"value1">>, C) end
@@ -27,10 +29,19 @@ route_test_() ->
     ,fun setup_db/0
     ,fun terminate_db/1
     ,fun(_ReturnOfSetup) ->
-             [test_callflow_route_request()
-             ,test_trunkstore_route_request()
-             ,test_callflow_route_win()
-             ,test_trunkstore_route_win()
+             [{"Testing Callflow route request"
+              ,test_callflow_route_request()
+              }
+             ,{"Testing Callflow route win"
+              ,test_callflow_route_win()
+              }
+             ,{"Testing Trunkstore route request"
+              ,test_trunkstore_route_request()
+              }
+             ,{"Testing Trunkstore route win"
+              ,test_trunkstore_route_win()
+              }
+             ,test_encode_decode()
              ]
      end
     }.
@@ -79,21 +90,22 @@ updateable_test_() ->
     ].
 
 setup_db() ->
+    ?LOG_DEBUG(":: Starting Kazoo FixtureDB"),
     {ok, _} = application:ensure_all_started(kazoo_config),
     {ok, Pid} = kazoo_data_link_sup:start_link(),
     Pid.
 
 terminate_db(Pid) ->
-  exit(Pid, shutdown),
-  Ref = monitor(process, Pid),
-  receive
-      {'DOWN', Ref, process, Pid, _Reason} ->
-          ok = application:stop(kazoo_config),
-          ok
-  after 1000 ->
-          ok = application:stop(kazoo_config),
-          error(exit_timeout)
-  end.
+    _DataLink = erlang:exit(Pid, normal),
+    Ref = monitor(process, Pid),
+    receive
+        {'DOWN', Ref, process, Pid, _Reason} ->
+            _KConfig = application:stop(kazoo_config),
+            ?LOG_DEBUG(":: Stopped Kazoo FixtureDB, data_link: ~p kazoo_config: ~p", [_DataLink, _KConfig])
+    after 1000 ->
+            _KConfig = application:stop(kazoo_config),
+            ?LOG_DEBUG(":: Stopped Kazoo FixtureDB, data_link: timeout kazoo_config: ~p", [_KConfig])
+    end.
 
 test_callflow_route_request() ->
     {ok,RouteReq} = kz_json:fixture(?APP, "fixtures/route_req/inbound-onnet-callflow.json"),
@@ -115,10 +127,13 @@ test_trunkstore_route_win() ->
     Call = create_trunkstore_call(),
     validate_kapps_call_basic(Call) ++ validate_kapps_call_trunkstore_win(Call).
 
-encode_decode_test() ->
+test_encode_decode() ->
     Call = kapps_call:exec(?UPDATERS, create_callflow_call()),
     Call1 = kapps_call:from_json(kapps_call:to_json(Call)),
-    ?assert(kapps_call:eq(Call, Call1)).
+    [{"Testing kapps_call encode decode"
+     ,?_assert(kapps_call:eq(Call, Call1))
+     }
+    ].
 
 validate_kapps_call_basic(Call) ->
     [{"verify the caller id name is the expected value"

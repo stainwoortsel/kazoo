@@ -88,7 +88,7 @@ clean: clean-test
 clean-test: $(CLEAN_MOAR)
 	$(if $(wildcard test/$(PROJECT).app), rm test/$(PROJECT).app)
 
-TEST_CONFIG=$(ROOT)/rel/test-config.ini
+TEST_CONFIG=$(ROOT)/rel/config-test.ini
 
 ## Use this one when debugging
 test: compile-test

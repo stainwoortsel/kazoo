@@ -8,6 +8,7 @@
 -module(kz_attributes_test).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("kazoo_stdlib/include/kz_types.hrl").
 
 -define(NEW_CF_FLAGS, [fun(C) -> kapps_call:set_account_id(<<"account0000000000000000000000002">>, C) end
                       ,fun(C) -> kapps_call:set_authorizing_id(<<"device00000000000000000000000002">>, C) end
@@ -36,20 +37,21 @@ kz_attributes_test_() ->
     }.
 
 setup_db() ->
+    ?LOG_DEBUG(":: Starting Kazoo FixtureDB"),
     {ok, _} = application:ensure_all_started(kazoo_config),
     {ok, Pid} = kazoo_data_link_sup:start_link(),
     Pid.
 
 terminate_db(Pid) ->
-    exit(Pid, shutdown),
+    _DataLink = erlang:exit(Pid, normal),
     Ref = monitor(process, Pid),
     receive
         {'DOWN', Ref, process, Pid, _Reason} ->
-            ok = application:stop(kazoo_config),
-            ok
+            _KConfig = application:stop(kazoo_config),
+            ?LOG_DEBUG(":: Stopped Kazoo FixtureDB, data_link: ~p kazoo_config: ~p", [_DataLink, _KConfig])
     after 1000 ->
-            ok = application:stop(kazoo_config),
-            error(exit_timeout)
+            _KConfig = application:stop(kazoo_config),
+            ?LOG_DEBUG(":: Stopped Kazoo FixtureDB, data_link: timeout kazoo_config: ~p", [_KConfig])
     end.
 
 
