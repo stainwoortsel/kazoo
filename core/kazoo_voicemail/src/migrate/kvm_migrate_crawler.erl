@@ -415,7 +415,7 @@ populate_queue(AccountIds, LastOfMonth) ->
 
 maybe_remove_account_from_queue({AccountId, FirstOfMonth, LastOfMonth, 'normal'}, Queue) ->
     ?SUP_LOG_WARNING("########## account ~s is migrated"
-            ,[AccountId]),
+                    ,[AccountId]),
     {'false', AccountId, remove_account_from_queue({AccountId, FirstOfMonth, LastOfMonth}, Queue)};
 maybe_remove_account_from_queue({AccountId, FirstOfMonth, LastOfMonth, _Reason}, Queue) ->
     ?SUP_LOG_ERROR("********** account ~s migration failed: ~p **********", [AccountId, _Reason]),

@@ -364,8 +364,8 @@ user_params(UserJObj) ->
 timezone(UserJObj) ->
     case kz_doc:account_id(UserJObj) of
         ?AN_ACCOUNT_ID ->
-          {ok,AccountJObj} = kz_json:fixture(?APP, "an_account.json"),
-          kz_account:timezone(AccountJObj);
+            {ok,AccountJObj} = kz_json:fixture(?APP, "an_account.json"),
+            kz_account:timezone(AccountJObj);
         _ ->
             kzd_user:timezone(UserJObj)
     end.

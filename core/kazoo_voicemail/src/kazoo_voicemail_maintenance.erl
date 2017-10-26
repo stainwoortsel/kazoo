@@ -175,20 +175,20 @@ renotify(Account, MessageId) ->
 -spec log_renotify_result(ne_binary(), ne_binary(), kz_amqp_worker:request_return()) -> 'ok'.
 log_renotify_result(MessageId, BoxId, {'ok', JObj}) ->
     ?SUP_LOG_DEBUG("re-notify sent message ~s from mailbox ~s: ~s"
-        ,[MessageId, BoxId, kz_json:encode(JObj)]
-        );
+                  ,[MessageId, BoxId, kz_json:encode(JObj)]
+                  );
 log_renotify_result(MessageId, BoxId, {'error', JObj}) ->
     ?SUP_LOG_DEBUG("re-notify failed to send message ~s from mailbox ~s: ~s"
-        ,[MessageId, BoxId, kz_json:encode(JObj)]
-        );
+                  ,[MessageId, BoxId, kz_json:encode(JObj)]
+                  );
 log_renotify_result(MessageId, BoxId, {'timeout', JObjs}) ->
     ?SUP_LOG_DEBUG("re-notify timed out sending message ~s from mailbox ~s: ~s"
-        ,[MessageId, BoxId, kz_json:encode(JObjs)]
-        );
+                  ,[MessageId, BoxId, kz_json:encode(JObjs)]
+                  );
 log_renotify_result(MessageId, BoxId, Result) ->
     ?SUP_LOG_DEBUG("unexpected error in re-notify sending message ~s from mailbox ~s: ~p"
-        ,[MessageId, BoxId, Result]
-        ).
+                  ,[MessageId, BoxId, Result]
+                  ).
 
 -spec get_modb(ne_binary(), ne_binary()) -> ne_binary().
 get_modb(?MATCH_MODB_SUFFIX_ENCODED(_A, _B, _C, _Y, _M) = MODb, _) -> MODb;
