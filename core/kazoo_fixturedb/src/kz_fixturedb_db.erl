@@ -5,7 +5,7 @@
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(kz_fixtures_db).
+-module(kz_fixturedb_db).
 
 %% DB operations
 -export([db_create/3
@@ -17,7 +17,7 @@
         ,db_list/2
         ]).
 
--include("kz_fixtures.hrl").
+-include("kz_fixturedb.hrl").
 
 %%%===================================================================
 %%% DB operations
@@ -37,7 +37,7 @@ db_view_cleanup(_Server, _DbName) ->
 
 -spec db_info(server_map()) -> {'ok', ne_binaries()} | fixture_error().
 db_info(#{url := ServerUrl}=Server) ->
-    #{url := AppUrl} = kz_fixtures_server:get_app_connection(Server),
+    #{url := AppUrl} = kz_fixturedb_server:get_app_connection(Server),
     get_dbs_list(ServerUrl, AppUrl).
 
 
@@ -50,7 +50,7 @@ db_info(Server, DbName) ->
 
 -spec db_exists(server_map(), ne_binary()) -> boolean().
 db_exists(Server, DbName) ->
-    #{url := Url} = kz_fixtures_server:maybe_use_app_connection(Server, DbName),
+    #{url := Url} = kz_fixturedb_server:maybe_use_app_connection(Server, DbName),
     filelib:is_dir(kz_term:to_list(Url)).
 
 -spec db_archive(server_map(), ne_binary(), ne_binary()) -> 'ok'.

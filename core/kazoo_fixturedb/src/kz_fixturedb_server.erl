@@ -5,7 +5,7 @@
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(kz_fixtures_server).
+-module(kz_fixturedb_server).
 
 %% Driver callbacks
 -export([new_connection/1
@@ -23,7 +23,7 @@
         ,maybe_use_app_connection/2
         ]).
 
--include("kz_fixtures.hrl").
+-include("kz_fixturedb.hrl").
 
 %%%===================================================================
 %%% Driver callbacks
@@ -31,8 +31,8 @@
 
 -spec new_connection(map()) -> {'ok', server_map()}.
 new_connection(Map) ->
-    Url = code:priv_dir(kazoo_fixtures),
-    {'ok', #{url => Url ++ "/fixture_dbs"
+    Url = code:priv_dir(kazoo_fixturedb),
+    {'ok', #{url => Url ++ "/dbs"
             ,options => Map
             }
     }.
@@ -86,12 +86,12 @@ maybe_use_app_connection(#{options := Options}=Server, DbName) ->
     of
         {'unedfined', _} -> Server;
         {_AppName, 'unedfined'} ->
-            ?LOG_DEBUG("test_db is not set, using kazoo_fixtures database..."),
+            ?LOG_DEBUG("test_db is not set, using kazoo_fixturedb database..."),
             Server;
         {AppName, DbName} ->
             set_app_connection(Server, AppName);
         {_AppName, _OtherDb} ->
-            ?LOG_DEBUG("requested db ~s is not test_db ~s, using kazoo_fixtures database path...", [DbName, _OtherDb]),
+            ?LOG_DEBUG("requested db ~s is not test_db ~s, using kazoo_fixturedb database path...", [DbName, _OtherDb]),
             Server
     end.
 
@@ -107,7 +107,7 @@ set_app_connection(#{options := Options}=Server, AppName) ->
            end,
     case Path of
         {'error', 'bad_name'} ->
-            ?LOG_DEBUG("bad_name for path ~p, using default kazoo_fixtures database path...", [AppName]),
+            ?LOG_DEBUG("bad_name for path ~p, using default kazoo_fixturedb database path...", [AppName]),
             Server;
         _ ->
             Server#{url => Path}

@@ -5,7 +5,7 @@
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(kz_fixtures_view).
+-module(kz_fixturedb_view).
 
 %% View-related
 -export([design_info/3
@@ -15,7 +15,7 @@
         ,all_docs/3
         ]).
 
--include("kz_fixtures.hrl").
+-include("kz_fixturedb.hrl").
 
 %%%===================================================================
 %%% View-related
@@ -27,11 +27,11 @@ design_info(_Server, _DbName, Design) ->
 
 -spec all_design_docs(server_map(), ne_binary(), kz_data:options()) -> docs_resp().
 all_design_docs(Server, DbName, _Options) ->
-    Db = kz_fixtures_server:get_db(Server, DbName),
-    Path = kz_fixtures_util:docs_dir(Db),
+    Db = kz_fixturedb_server:get_db(Server, DbName),
+    Path = kz_fixturedb_util:docs_dir(Db),
     case filelib:wildcard(Path ++ "/_design*") of
         [] ->
-            case kz_fixtures_db:db_exists(Server, DbName) of
+            case kz_fixturedb_db:db_exists(Server, DbName) of
                 'true' -> {ok, []};
                 'false' -> {error, not_found}
             end;
@@ -41,10 +41,10 @@ all_design_docs(Server, DbName, _Options) ->
 
 -spec get_results(server_map(), ne_binary(), ne_binary(), kz_data:options()) -> docs_resp().
 get_results(Server, DbName, Design, Options) ->
-    Db = kz_fixtures_server:get_db(Server, DbName),
+    Db = kz_fixturedb_server:get_db(Server, DbName),
     props:get_first_defined(?DANGEROUS_VIEW_OPTS, Options) =:= undefined
         andalso ?LOG_DEBUG("you're testing too much, go home"),
-    case kz_fixtures_util:open_view(Db, kz_term:to_binary(Design), Options) of
+    case kz_fixturedb_util:open_view(Db, kz_term:to_binary(Design), Options) of
         {ok, Result} -> prepare_view_result(Server, DbName, Result, Options);
         {error, _} -> {ok, []}
     end.
@@ -69,7 +69,7 @@ prepare_view_result(Server, DbName, Result, Options) ->
     case props:get_value(include_docs, Options, false) of
         false -> {ok, sort_and_limit(Result, Options)};
         true ->
-            Opened = [kz_fixtures_doc:open_doc(Server, DbName, kz_doc:id(D), Options)
+            Opened = [kz_fixturedb_doc:open_doc(Server, DbName, kz_doc:id(D), Options)
                       || D <- sort_and_limit(Result, Options)
                      ],
             lists:filter(fun({ok, _}) -> true; (_) -> false end, Opened)

@@ -5,7 +5,7 @@
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(kz_fixtures_attachments).
+-module(kz_fixturedb_attachments).
 
 %% Attachment-related
 -export([fetch_attachment/4
@@ -15,7 +15,7 @@
         ,attachment_url/5
         ]).
 
--include("kz_fixtures.hrl").
+-include("kz_fixturedb.hrl").
 
 %%%===================================================================
 %%% Attachment-related
@@ -23,8 +23,8 @@
 
 -spec fetch_attachment(server_map(), ne_binary(), ne_binary(), ne_binary()) -> {ok, binary()} | fixture_error().
 fetch_attachment(Server, DbName, DocId, AName) ->
-    Db = kz_fixtures_server:get_db(Server, DbName),
-    kz_fixtures_util:open_attachment(Db, DocId, AName).
+    Db = kz_fixturedb_server:get_db(Server, DbName),
+    kz_fixturedb_util:open_attachment(Db, DocId, AName).
 
 -spec stream_attachment(server_map(), ne_binary(), ne_binary(), ne_binary(), pid()) -> {ok, reference()} | fixture_error().
 stream_attachment(Server, DbName, DocId, AName, Caller) ->
@@ -35,18 +35,18 @@ stream_attachment(Server, DbName, DocId, AName, Caller) ->
 
 -spec put_attachment(server_map(), ne_binary(), ne_binary(), ne_binary(), ne_binary(), kz_data:options()) -> doc_resp().
 put_attachment(Server, DbName, DocId, AName, Contents, Options) ->
-    Doc = kz_fixtures_doc:open_doc(Server, DbName, DocId, Options),
+    Doc = kz_fixturedb_doc:open_doc(Server, DbName, DocId, Options),
     prepare_att_doc(Doc, AName, Contents, Options).
 
 -spec delete_attachment(server_map(), ne_binary(), ne_binary(), ne_binary(), kz_data:options()) -> docs_resp().
 delete_attachment(Server, DbName, DocId, _AName, Options) ->
-    Doc = kz_fixtures_doc:open_doc(Server, DbName, DocId, Options),
+    Doc = kz_fixturedb_doc:open_doc(Server, DbName, DocId, Options),
     del_att_response(Doc).
 
 -spec attachment_url(server_map(), ne_binary(), ne_binary(), ne_binary(), kz_data:options()) -> ne_binary().
 attachment_url(Server, DbName, DocId, AName, _Options) ->
-    Db = kz_fixtures_server:get_db(Server, DbName),
-    kz_fixtures_util:att_path(Db, DocId, AName).
+    Db = kz_fixturedb_server:get_db(Server, DbName),
+    kz_fixturedb_util:att_path(Db, DocId, AName).
 
 %%%===================================================================
 %%% Internal functions
@@ -58,7 +58,7 @@ relay_stream_attachment(Caller, Ref, AttResult) ->
 
 -spec prepare_att_doc(doc_resp(), ne_binary(), ne_binary(), kz_data:options()) -> doc_resp().
 prepare_att_doc({ok, Doc}, AName, Contents, Options) ->
-    JObj = kz_fixtures_util:update_revision(Doc),
+    JObj = kz_fixturedb_util:update_revision(Doc),
     [RevPos|_] = kz_doc:revision(JObj),
     Att = kz_json:from_list_recursive(
             [{<<"_attachments">>
@@ -79,7 +79,7 @@ prepare_att_doc({error, _}=Error, _, _, _) ->
 del_att_response({ok, JObj}) ->
     {ok, kz_json:from_list(
            [{<<"id">>, kz_doc:id(JObj)}
-           ,{<<"rev">>, kz_doc:revision(kz_fixtures_util:update_revision(JObj))}
+           ,{<<"rev">>, kz_doc:revision(kz_fixturedb_util:update_revision(JObj))}
            ])
     };
 del_att_response({error, _}=Error) ->

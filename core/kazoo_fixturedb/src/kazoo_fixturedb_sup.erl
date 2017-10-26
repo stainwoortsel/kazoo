@@ -5,11 +5,11 @@
 %%% @end
 %%% @contributors
 %%%-------------------------------------------------------------------
--module(kazoo_fixtures_sup).
+-module(kazoo_fixturedb_sup).
 
 -behaviour(supervisor).
 
--include("kz_fixtures.hrl").
+-include("kz_fixturedb.hrl").
 
 -define(SERVER, ?MODULE).
 
