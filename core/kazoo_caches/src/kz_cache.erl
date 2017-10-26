@@ -180,8 +180,9 @@ wait_for_key(Key, Timeout) -> wait_for_key_local(?SERVER, Key, Timeout).
 store_local(Srv, K, V) -> store_local(Srv, K, V, []).
 
 -ifdef(TEST).
-store_local(Srv, K, _, _) ->
-    ?LOG_DEBUG("pretending storing ~p in ~p", [K, Srv]).
+store_local(_Srv, _K, _, _) ->
+    %% ?LOG_DEBUG("pretending storing ~p in ~p", [_K, _Srv]).
+    'ok'.
 -else.
 store_local(Srv, K, V, Props) when is_atom(Srv) ->
     case whereis(Srv) of
@@ -227,8 +228,9 @@ erase_local(Srv, K) ->
 
 -spec flush_local(text() | atom()) -> 'ok'.
 -ifdef(TEST).
-flush_local(Srv) ->
-    ?LOG_DEBUG("pretending flushing ~p", [Srv]).
+flush_local(_Srv) ->
+    %% ?LOG_DEBUG("pretending flushing ~p", [_Srv]).
+    'ok'.
 -else.
 flush_local(Srv) when not is_atom(Srv) ->
     flush_local(kz_term:to_atom(Srv));
@@ -238,8 +240,8 @@ flush_local(Srv) ->
 
 -spec fetch_keys_local(atom()) -> list().
 -ifdef(TEST).
-fetch_keys_local(Srv) ->
-    ?LOG_DEBUG("pretending fetching keys for ~p", [Srv]),
+fetch_keys_local(_Srv) ->
+    %% ?LOG_DEBUG("pretending fetching keys for ~p", [_Srv]),
     [].
 -else.
 fetch_keys_local(Srv) ->
@@ -255,8 +257,8 @@ fetch_keys_local(Srv) ->
 -spec filter_erase_local(atom(), fun((any(), any()) -> boolean())) ->
                                 non_neg_integer().
 -ifdef(TEST).
-filter_erase_local(Srv, _) ->
-    ?LOG_DEBUG("pretending filter erasing for ~p", [Srv]),
+filter_erase_local(_Srv, _) ->
+    %% ?LOG_DEBUG("pretending filter erasing for ~p", [_Srv]),
     0.
 -else.
 filter_erase_local(Srv, Pred) when is_function(Pred, 2) ->
@@ -274,8 +276,8 @@ filter_erase_local(Srv, Pred) when is_function(Pred, 2) ->
 
 -spec filter_local(atom(), fun((any(), any()) -> boolean())) -> [{any(), any()}].
 -ifdef(TEST).
-filter_local(Srv, _) ->
-    ?LOG_DEBUG("pretending filtering for ~p", [Srv]),
+filter_local(_Srv, _) ->
+    %% ?LOG_DEBUG("pretending filtering for ~p", [_Srv]),
     [].
 -else.
 filter_local(Srv, Pred) when is_function(Pred, 2) ->
@@ -309,8 +311,9 @@ dump_local(Srv, ShowValue) ->
 
 -spec dump_table(ets:tab(), boolean()) -> 'ok'.
 -ifdef(TEST).
-dump_table(Tab, _) ->
-    ?LOG_DEBUG("pretending dumping table ~p", [Tab]).
+dump_table(_Tab, _) ->
+    %% ?LOG_DEBUG("pretending dumping table ~p", [_Tab]).
+    'ok'.
 -else.
 dump_table(Tab, ShowValue) ->
     Now = kz_time:now_s(),
@@ -359,8 +362,8 @@ wait_for_key_local(Srv, Key) ->
     wait_for_key_local(Srv, Key, ?DEFAULT_WAIT_TIMEOUT).
 
 -ifdef(TEST).
-wait_for_key_local(Srv, Key, Timeout) ->
-    ?LOG_DEBUG("pretending waited ~b for ~p in ~p", [Timeout, Key, Srv]),
+wait_for_key_local(_Srv, _Key, _Timeout) ->
+    %% ?LOG_DEBUG("pretending waited ~b for ~p in ~p", [_Timeout, _Key, _Srv]),
     {error, timeout}.
 -else.
 wait_for_key_local(Srv, Key, Timeout) ->
