@@ -1,52 +1,46 @@
 {
-   "_id": "trunkstore0000000000000000000001",
-   "_rev": "1-88bdb12d6db209211cc0af121e43ee0f",
-   "name": "Trunk Test 001",
-   "account": {
-       "auth_realm": "4a6863.sip.2600hz.local"
-   },
-   "servers": [
-       {
-           "DIDs": {
-           },
-           "options": {
-               "enabled": true,
-               "inbound_format": "1npan",
-               "international": false,
-               "caller_id": {
-               },
-               "e911_info": {
-               },
-               "failover": {
-               },
-               "codecs": [
-                   "PCMU"
-               ],
-               "media_handling": "process",
-               "delay": 0,
-               "force_outbound": false
-           },
-           "permissions": {
-               "users": [
-               ]
-           },
-           "monitor": {
-               "monitor_enabled": false
-           },
-           "server_name": "PBX new",
-           "auth": {
-               "auth_method": "IP",
-               "ip": "dns.2600hz.local"
-           },
-           "server_type": "threecom",
-           "cfg": {
-           }
-       }
-   ],
-   "pvt_modified": 63673589010,
-   "pvt_created": 63638848010,
-   "pvt_account_db": "account%2Fac%2Fco%2Funt0000000000000000000000001",
-   "pvt_account_id": "account0000000000000000000000001",
-   "pvt_vsn": "1",
-   "pvt_type": "sys_info"
+    "_id": "trunkstore0000000000000000000001",
+    "_rev": "1-88bdb12d6db209211cc0af121e43ee0f",
+    "account": {
+        "auth_realm": "4a6863.sip.2600hz.local"
+    },
+    "name": "Trunk Test 001",
+    "pvt_account_db": "account%2Fac%2Fco%2Funt0000000000000000000000001",
+    "pvt_account_id": "account0000000000000000000000001",
+    "pvt_created": 63638848010,
+    "pvt_modified": 63673589010,
+    "pvt_type": "sys_info",
+    "pvt_vsn": "1",
+    "servers": [
+        {
+            "DIDs": {},
+            "auth": {
+                "auth_method": "IP",
+                "ip": "dns.2600hz.local"
+            },
+            "cfg": {},
+            "monitor": {
+                "monitor_enabled": false
+            },
+            "options": {
+                "caller_id": {},
+                "codecs": [
+                    "PCMU"
+                ],
+                "delay": 0,
+                "e911_info": {},
+                "enabled": true,
+                "failover": {},
+                "force_outbound": false,
+                "inbound_format": "1npan",
+                "international": false,
+                "media_handling": "process"
+            },
+            "permissions": {
+                "users": []
+            },
+            "server_name": "PBX new",
+            "server_type": "threecom"
+        }
+    ]
 }

@@ -302,7 +302,7 @@ fetch_dataplan(Id) ->
         {'ok', JObj} -> JObj;
         {'error', _} when Id =:= ?SYSTEM_DATAPLAN ->
             JObj = default_dataplan(),
-            'ok' = kz_datamgr:add_to_doc_cache(?KZ_DATA_DB, Id, JObj),
+            _ = kz_datamgr:add_to_doc_cache(?KZ_DATA_DB, Id, JObj),
             JObj;
         {'error', _} -> kz_json:new()
     end.

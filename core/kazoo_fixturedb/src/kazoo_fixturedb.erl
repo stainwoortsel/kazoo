@@ -106,7 +106,7 @@ db_delete(Server, DbName) ->
 db_view_cleanup(Server, DbName) ->
     kz_fixturedb_db:db_view_cleanup(Server, DbName).
 
--spec db_info(server_map()) -> {ok, ne_binaries()} | fixture_error().
+-spec db_info(server_map()) -> {ok, ne_binaries()}.
 db_info(Server) ->
     kz_fixturedb_db:db_info(Server).
 
@@ -122,7 +122,7 @@ db_exists(Server, DbName) ->
 db_archive(_, _, _) ->
     ok.
 
--spec db_list(server_map(), kz_data:options()) -> docs_resp().
+-spec db_list(server_map(), kz_data:options()) -> {'ok', ne_binaries()}.
 db_list(Server, Options) ->
     kz_fixturedb_db:db_list(Server, Options).
 

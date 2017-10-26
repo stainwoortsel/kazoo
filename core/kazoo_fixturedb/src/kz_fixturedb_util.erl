@@ -101,7 +101,7 @@ update_revision(JObj) ->
 %%% Internal functions
 %%%===================================================================
 
--spec read_json(file:filename_all()) -> doc_resp().
+-spec read_json(file:filename_all()) -> {ok, kz_json:object()} | {error, not_found}.
 read_json(Path) ->
     case read_file(Path) of
         {ok, Bin} -> {ok, kz_json:decode(Bin)};

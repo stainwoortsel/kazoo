@@ -35,10 +35,10 @@ db_delete(_Server, _DbName) ->
 db_view_cleanup(_Server, _DbName) ->
     'true'.
 
--spec db_info(server_map()) -> {'ok', ne_binaries()} | fixture_error().
+-spec db_info(server_map()) -> {'ok', ne_binaries()}.
 db_info(#{url := ServerUrl}=Server) ->
     #{url := AppUrl} = kz_fixturedb_server:get_app_connection(Server),
-    get_dbs_list(ServerUrl, AppUrl).
+    {ok, get_dbs_list(ServerUrl, AppUrl)}.
 
 
 -spec db_info(server_map(), ne_binary()) -> docs_resp().
@@ -57,7 +57,7 @@ db_exists(Server, DbName) ->
 db_archive(_, _, _) ->
     'ok'.
 
--spec db_list(server_map(), kz_data:options()) -> docs_resp().
+-spec db_list(server_map(), kz_data:options()) -> {'ok', ne_binaries()}.
 db_list(Server, _Options) ->
     db_info(Server).
 
@@ -73,6 +73,6 @@ get_dbs_list(ServerUrl, AppUrl) ->
                  || Db <- get_dbs_list(ServerUrl) ++ get_dbs_list(AppUrl)
                 ]).
 
--spec get_dbs_list(ne_binary()) -> ne_binaries().
+-spec get_dbs_list(ne_binary()) -> [string()].
 get_dbs_list(Url) ->
     filelib:wildcard(kz_term:to_list(Url) ++ "/*").

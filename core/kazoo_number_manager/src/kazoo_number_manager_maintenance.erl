@@ -210,8 +210,8 @@ update_number_services_view(?MATCH_ACCOUNT_ENCODED(_)=AccountDb) ->
            end,
     PathMap = [<<"views">>, <<"reconcile_services">>, <<"map">>],
     PathRed = [<<"views">>, <<"reconcile_services">>, <<"reduce">>],
-    case kz_json:are_equal(MapView, kz_json:get_ne_binary_value(PathMap, View))
-        andalso kz_json:are_equal(RedView, kz_json:get_ne_binary_value(PathRed, View))
+    case MapView =:= kz_json:get_ne_binary_value(PathMap, View)
+        andalso RedView =:= kz_json:get_ne_binary_value(PathRed, View)
     of
         true -> no_return;
         false ->
@@ -353,6 +353,7 @@ escape(?NE_BINARY=Bin0) ->
     <<Start:StartSz/binary, Escaped:SizeOfWhatIWant/binary, End:EndSz/binary>> = Bin,
     Escaped.
 
+-spec number_services_map(ne_binaries(), ne_binaries()) -> ne_binary().
 number_services_map(Classifications, Regexs) ->
     iolist_to_binary(
       ["function(doc) {"
@@ -377,6 +378,7 @@ number_services_map(Classifications, Regexs) ->
        "}"
       ]).
 
+-spec number_services_red() -> ne_binary().
 number_services_red() ->
     iolist_to_binary(
       ["function(Keys, Values, _Rereduce) {"
