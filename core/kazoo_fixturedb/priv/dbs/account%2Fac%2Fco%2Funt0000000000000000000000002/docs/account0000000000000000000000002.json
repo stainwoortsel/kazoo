@@ -251,6 +251,7 @@
     "pvt_auth_account_id": "account0000000000000000000000001",
     "pvt_auth_user_id": "user0000000000000000000000000001",
     "pvt_created": 63636183145,
+    "pvt_document_hash": "23d5d338c3be014d6474f539f00b4877",
     "pvt_enabled": true,
     "pvt_is_authenticated": true,
     "pvt_modified": 63667898685,

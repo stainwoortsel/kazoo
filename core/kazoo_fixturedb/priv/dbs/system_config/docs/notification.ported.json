@@ -1,0 +1,203 @@
+{
+  "_id" : "notification.ported",
+  "_rev" : "175-27b8ec2e5c174ef698cdd1890417b5ff",
+  "pvt_account_id" : "system_config",
+  "pvt_account_db" : "system_config",
+  "pvt_created" : 63675350017,
+  "pvt_modified" : 63675350017,
+  "pvt_type" : "notification",
+  "pvt_node" : "kazoo_apps@example.com",
+  "pvt_document_hash" : "af65f663e67e7b1787a87b5b024f7795",
+  "macros" : {
+    "port_request.comment.content" : {
+      "i18n_label" : "comment.content",
+      "friendly_name" : "Comment Text",
+      "description" : "Comment Text"
+    },
+    "port_request.comment.timestamp.local" : {
+      "i18n_label" : "comment.timestamp_local",
+      "friendly_name" : "Comment UTC Timestamp",
+      "description" : "Comment Local Timestamp"
+    },
+    "port_request.comment.timestamp.utc" : {
+      "i18n_label" : "comment.timestamp_utc",
+      "friendly_name" : "Comment UTC Timestamp",
+      "description" : "Comment UTC Timestamp"
+    },
+    "port_request.comment.timestamp.timezone" : {
+      "i18n_label" : "comment.timestamp_timezone",
+      "friendly_name" : "Comment Local Timestamp",
+      "description" : "Comment Timestamp Local Timezone"
+    },
+    "port_request.customser_contact" : {
+      "i18n_label" : "customser_contact",
+      "friendly_name" : "Customser Email",
+      "description" : "Customser Email"
+    },
+    "port_request.bill_name" : {
+      "i18n_label" : "bill_name",
+      "friendly_name" : "Bill Name",
+      "description" : "Name on the bill"
+    },
+    "port_request.bill_address" : {
+      "i18n_label" : "bill_address",
+      "friendly_name" : "Bill Address",
+      "description" : "Address on the bill"
+    },
+    "port_request.bill_locality" : {
+      "i18n_label" : "bill_locality",
+      "friendly_name" : "Bill Locality",
+      "description" : "City on the bill"
+    },
+    "port_request.bill_region" : {
+      "i18n_label" : "bill_region",
+      "friendly_name" : "Bill Region",
+      "description" : "Region on the bill"
+    },
+    "port_request.bill_postal_code" : {
+      "i18n_label" : "bill_postal_code",
+      "friendly_name" : "Bill Postal Code",
+      "description" : "Postal Code on the bill"
+    },
+    "port_request.id" : {
+      "i18n_label" : "id",
+      "friendly_name" : "Port Request Id",
+      "description" : "Port Request Id"
+    },
+    "port_request.name" : {
+      "i18n_label" : "name",
+      "friendly_name" : "Name",
+      "description" : "Name"
+    },
+    "port_request.numbers" : {
+      "i18n_label" : "numbers",
+      "friendly_name" : "Numbers",
+      "description" : "Numbers"
+    },
+    "port_request.port_state" : {
+      "i18n_label" : "port_state",
+      "friendly_name" : "State of Port Request",
+      "description" : "State of Port Request"
+    },
+    "port_request.port_scheduled_date.local" : {
+      "i18n_label" : "port_scheduled_date_local",
+      "friendly_name" : "Local Scheduled Date",
+      "description" : "Local Scheduled Date"
+    },
+    "port_request.port_scheduled_date.utc" : {
+      "i18n_label" : "port_scheduled_date_utc",
+      "friendly_name" : "UTC Scheduled Date",
+      "description" : "UTC Scheduled Date"
+    },
+    "port_request.port_scheduled_date.timezone" : {
+      "i18n_label" : "port_scheduled_date_timezone",
+      "friendly_name" : "Scheduled Date Timezone",
+      "description" : "Scheduled Date Local Timezone"
+    },
+    "port_request.service_provider" : {
+      "i18n_label" : "service_provider",
+      "friendly_name" : "Service Provider",
+      "description" : "Service Provider"
+    },
+    "port_request.requested_port_date" : {
+      "i18n_label" : "requested_port_date",
+      "friendly_name" : "Requested Port Date",
+      "description" : "Requested Port Date"
+    },
+    "account.name" : {
+      "i18n_label" : "account_name",
+      "friendly_name" : "Account Name",
+      "description" : "Name of the account"
+    },
+    "account.realm" : {
+      "i18n_label" : "account_realm",
+      "friendly_name" : "Account Realm",
+      "description" : "SIP Realm of the account"
+    },
+    "account.id" : {
+      "i18n_label" : "account_id",
+      "friendly_name" : "Account ID",
+      "description" : "Account ID"
+    },
+    "account.language" : {
+      "i18n_label" : "account_language",
+      "friendly_name" : "Account Language",
+      "description" : "Account Language"
+    },
+    "account.timezone" : {
+      "i18n_label" : "account_timezone",
+      "friendly_name" : "Account Timezone",
+      "description" : "Account Timezone"
+    },
+    "account.parent_id" : {
+      "i18n_label" : "account_parent_id",
+      "friendly_name" : "Parent Account ID",
+      "description" : "Parent Account ID"
+    },
+    "account.parent_name" : {
+      "i18n_label" : "account_parent_name",
+      "friendly_name" : "Parent Account Name",
+      "description" : "Parent Account Name"
+    },
+    "account.parent_realm" : {
+      "i18n_label" : "account_parent_realm",
+      "friendly_name" : "Parent Account Realm",
+      "description" : "Parent Account Realm"
+    },
+    "system.hostname" : {
+      "i18n_label" : "system_hostname",
+      "friendly_name" : "Hostname",
+      "description" : "Hostname of system generating the email"
+    },
+    "system.encoded_hostname" : {
+      "i18n_label" : "system_encoded_hostname",
+      "friendly_name" : "Encoded Hostname",
+      "description" : "Hostname of system generating the email, encoded to not reveal the real value"
+    },
+    "system.node" : {
+      "i18n_label" : "system_node",
+      "friendly_name" : "Node",
+      "description" : "Node name of system generating the email"
+    },
+    "system.encoded_node" : {
+      "i18n_label" : "system_encoded_node",
+      "friendly_name" : "Encoded Node",
+      "description" : "Node name of system generating the email, encoded to not reveal the real value"
+    }
+  },
+  "subject" : "Number port request '{{port_request.name}}' completed",
+  "category" : "port_request",
+  "friendly_name" : "Port Successful",
+  "to" : {
+    "type" : "original"
+  },
+  "from" : "no-reply@example.com",
+  "cc" : {
+    "type" : "specified",
+    "email_addresses" : [
+      
+    ]
+  },
+  "bcc" : {
+    "type" : "specified",
+    "email_addresses" : [
+      
+    ]
+  },
+  "_attachments" : {
+    "template.text/html" : {
+      "content_type" : "text/html",
+      "revpos" : 174,
+      "digest" : "md5-cl8M7CzevjO4kUY+xR82gA==",
+      "length" : 6509,
+      "stub" : true
+    },
+    "template.text/plain" : {
+      "content_type" : "text/plain",
+      "revpos" : 173,
+      "digest" : "md5-2oQB2+bkuGHUUCREVNqOTw==",
+      "length" : 470,
+      "stub" : true
+    }
+  }
+}

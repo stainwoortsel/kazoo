@@ -1,0 +1,36 @@
+{
+  "_id" : "notification.fax_outbound_smtp_error_to_email",
+  "_rev" : "30-cca162681d54a4ab9e1be5a9c294410c",
+  "pvt_account_id" : "system_config",
+  "pvt_account_db" : "system_config",
+  "pvt_created" : 63675350016,
+  "pvt_modified" : 63675350016,
+  "pvt_type" : "notification",
+  "pvt_node" : "kazoo_apps@example.com",
+  "pvt_document_hash" : "2a8666172b9cec4f502a983bc450230d",
+  "subject" : "Error Sending Fax",
+  "category" : "fax",
+  "friendly_name" : "Outbound Fax SMTP Error to Email",
+  "from" : "no-reply@example.com",
+  "cc" : {
+    "type" : "specified",
+    "email_addresses" : [
+      
+    ]
+  },
+  "bcc" : {
+    "type" : "specified",
+    "email_addresses" : [
+      
+    ]
+  },
+  "_attachments" : {
+    "template.text/html" : {
+      "content_type" : "text/html",
+      "revpos" : 29,
+      "digest" : "md5-D0/x4/xr9IbHsIxNU961XQ==",
+      "length" : 65,
+      "stub" : true
+    }
+  }
+}

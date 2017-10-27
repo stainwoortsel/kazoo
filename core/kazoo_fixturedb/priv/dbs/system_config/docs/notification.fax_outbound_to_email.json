@@ -1,0 +1,278 @@
+{
+  "_id" : "notification.fax_outbound_to_email",
+  "_rev" : "171-42581375fc9bdcf35c0878f2de86e6e5",
+  "pvt_account_id" : "system_config",
+  "pvt_account_db" : "system_config",
+  "pvt_created" : 63675350016,
+  "pvt_modified" : 63675350016,
+  "pvt_type" : "notification",
+  "pvt_node" : "kazoo_apps@example.com",
+  "pvt_document_hash" : "0995d276f2d8dadbccaa464a80407888",
+  "macros" : {
+    "fax.id" : {
+      "i18n_label" : "fax_id",
+      "friendly_name" : "Fax ID",
+      "description" : "Fax ID"
+    },
+    "fax.doc_id" : {
+      "i18n_label" : "fax_doc_id",
+      "friendly_name" : "Document ID",
+      "description" : "Crossbar ID of the Fax document"
+    },
+    "fax.media" : {
+      "i18n_label" : "fax_media",
+      "friendly_name" : "Fax Name",
+      "description" : "Name of the fax transmission"
+    },
+    "fax.total_pages" : {
+      "i18n_label" : "fax_total_pages",
+      "friendly_name" : "Total Pages",
+      "description" : "Total number of pages received"
+    },
+    "fax.document_type" : {
+      "i18n_label" : "fax_document_type",
+      "friendly_name" : "Fax Document Type",
+      "description" : "Type of the fax document"
+    },
+    "fax.document_size" : {
+      "i18n_label" : "fax_document_size",
+      "friendly_name" : "Fax Document Size",
+      "description" : "Size of the fax document in bytes"
+    },
+    "fax.success" : {
+      "i18n_label" : "fax_success",
+      "friendly_name" : "Fax Success",
+      "description" : "Was the fax successful"
+    },
+    "fax.ecm_used" : {
+      "i18n_label" : "fax_ecm_used",
+      "friendly_name" : "ECM Used",
+      "description" : "Was ECM used"
+    },
+    "fax.result_text" : {
+      "i18n_label" : "fax_result_text",
+      "friendly_name" : "Fax Result Text",
+      "description" : "Result text from transmission"
+    },
+    "fax.result_code" : {
+      "i18n_label" : "fax_result_code",
+      "friendly_name" : "Fax Result Code",
+      "description" : "Result code from transmission"
+    },
+    "fax.transferred_pages" : {
+      "i18n_label" : "fax_transferred_pages",
+      "friendly_name" : "Transferred Pages",
+      "description" : "How many pages were transferred"
+    },
+    "fax.bad_rows" : {
+      "i18n_label" : "fax_bad_rows",
+      "friendly_name" : "Bad Rows",
+      "description" : "How many bad rows"
+    },
+    "fax.transfer_rate" : {
+      "i18n_label" : "fax_transfer_rate",
+      "friendly_name" : "Transfer Rate",
+      "description" : "Transfer Rate"
+    },
+    "fax.encoding" : {
+      "i18n_label" : "fax_encoding",
+      "friendly_name" : "Fax Encoding",
+      "description" : "Encoding of the fax"
+    },
+    "fax.box_id" : {
+      "i18n_label" : "fax_box_id",
+      "friendly_name" : "FaxBox ID",
+      "description" : "FaxBox ID"
+    },
+    "fax.box_name" : {
+      "i18n_label" : "fax_box_name",
+      "friendly_name" : "FaxBox Name",
+      "description" : "FaxBox Name"
+    },
+    "fax.timestamp" : {
+      "i18n_label" : "fax_timestamp",
+      "friendly_name" : "Fax Timestamp",
+      "description" : "Fax Timestamp"
+    },
+    "fax.remote_station_id" : {
+      "i18n_label" : "fax_remote_station_id",
+      "friendly_name" : "Fax Remote Station ID",
+      "description" : "Fax Remote Station ID"
+    },
+    "call_id" : {
+      "i18n_label" : "call_id",
+      "friendly_name" : "Call ID",
+      "description" : "Call ID of the caller"
+    },
+    "caller_id.number" : {
+      "i18n_label" : "caller_id_number",
+      "friendly_name" : "Caller ID Number",
+      "description" : "Number of the caller"
+    },
+    "caller_id.name" : {
+      "i18n_label" : "caller_id_name",
+      "friendly_name" : "Caller ID Name",
+      "description" : "Name of the caller"
+    },
+    "callee_id.number" : {
+      "i18n_label" : "callee_id_number",
+      "friendly_name" : "Callee ID Number",
+      "description" : "Number of the callee"
+    },
+    "callee_id.name" : {
+      "i18n_label" : "callee_id_name",
+      "friendly_name" : "Callee ID Name",
+      "description" : "Name of the callee"
+    },
+    "date_called.utc" : {
+      "i18n_label" : "date_called_utc",
+      "friendly_name" : "Date (UTC)",
+      "description" : "When was the voicemail left (UTC)"
+    },
+    "date_called.local" : {
+      "i18n_label" : "date_called_local",
+      "friendly_name" : "Date",
+      "description" : "When was the voicemail left (Local time)"
+    },
+    "from.user" : {
+      "i18n_label" : "from_user",
+      "friendly_name" : "From User",
+      "description" : "SIP From Username"
+    },
+    "from.realm" : {
+      "i18n_label" : "from_realm",
+      "friendly_name" : "From Realm",
+      "description" : "SIP From Realm"
+    },
+    "to.user" : {
+      "i18n_label" : "to_user",
+      "friendly_name" : "To User",
+      "description" : "SIP To Username"
+    },
+    "to.realm" : {
+      "i18n_label" : "to_realm",
+      "friendly_name" : "To Realm",
+      "description" : "SIP To Realm"
+    },
+    "user.first_name" : {
+      "i18n_label" : "user_first_name",
+      "friendly_name" : "First Name",
+      "description" : "First name of the user"
+    },
+    "user.last_name" : {
+      "i18n_label" : "user_last_name",
+      "friendly_name" : "Last Name",
+      "description" : "Last name of the user"
+    },
+    "user.email" : {
+      "i18n_label" : "user_email",
+      "friendly_name" : "Email",
+      "description" : "Email of the user"
+    },
+    "user.timezone" : {
+      "i18n_label" : "user_timezone",
+      "friendly_name" : "Timezone",
+      "description" : "Timezone of the user"
+    },
+    "user.username" : {
+      "i18n_label" : "username",
+      "friendly_name" : "Username",
+      "description" : "Username"
+    },
+    "account.name" : {
+      "i18n_label" : "account_name",
+      "friendly_name" : "Account Name",
+      "description" : "Name of the account"
+    },
+    "account.realm" : {
+      "i18n_label" : "account_realm",
+      "friendly_name" : "Account Realm",
+      "description" : "SIP Realm of the account"
+    },
+    "account.id" : {
+      "i18n_label" : "account_id",
+      "friendly_name" : "Account ID",
+      "description" : "Account ID"
+    },
+    "account.language" : {
+      "i18n_label" : "account_language",
+      "friendly_name" : "Account Language",
+      "description" : "Account Language"
+    },
+    "account.timezone" : {
+      "i18n_label" : "account_timezone",
+      "friendly_name" : "Account Timezone",
+      "description" : "Account Timezone"
+    },
+    "account.parent_id" : {
+      "i18n_label" : "account_parent_id",
+      "friendly_name" : "Parent Account ID",
+      "description" : "Parent Account ID"
+    },
+    "account.parent_name" : {
+      "i18n_label" : "account_parent_name",
+      "friendly_name" : "Parent Account Name",
+      "description" : "Parent Account Name"
+    },
+    "account.parent_realm" : {
+      "i18n_label" : "account_parent_realm",
+      "friendly_name" : "Parent Account Realm",
+      "description" : "Parent Account Realm"
+    },
+    "system.hostname" : {
+      "i18n_label" : "system_hostname",
+      "friendly_name" : "Hostname",
+      "description" : "Hostname of system generating the email"
+    },
+    "system.encoded_hostname" : {
+      "i18n_label" : "system_encoded_hostname",
+      "friendly_name" : "Encoded Hostname",
+      "description" : "Hostname of system generating the email, encoded to not reveal the real value"
+    },
+    "system.node" : {
+      "i18n_label" : "system_node",
+      "friendly_name" : "Node",
+      "description" : "Node name of system generating the email"
+    },
+    "system.encoded_node" : {
+      "i18n_label" : "system_encoded_node",
+      "friendly_name" : "Encoded Node",
+      "description" : "Node name of system generating the email, encoded to not reveal the real value"
+    }
+  },
+  "subject" : "Fax has been sended to {{callee_id.name}} ({{callee_id.number}})",
+  "category" : "fax",
+  "friendly_name" : "Outbound Fax to Email",
+  "to" : {
+    "type" : "original"
+  },
+  "from" : "no-reply@example.com",
+  "cc" : {
+    "type" : "specified",
+    "email_addresses" : [
+      
+    ]
+  },
+  "bcc" : {
+    "type" : "specified",
+    "email_addresses" : [
+      
+    ]
+  },
+  "_attachments" : {
+    "template.text/html" : {
+      "content_type" : "text/html",
+      "revpos" : 170,
+      "digest" : "md5-DabB4xQa8dF/zg/TXY14LA==",
+      "length" : 8148,
+      "stub" : true
+    },
+    "template.text/plain" : {
+      "content_type" : "text/plain",
+      "revpos" : 169,
+      "digest" : "md5-VNbtsU8sXfQbVc2CMsVTSw==",
+      "length" : 876,
+      "stub" : true
+    }
+  }
+}
