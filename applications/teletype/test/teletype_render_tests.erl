@@ -12,47 +12,78 @@
 
 -export([overwrite_t0/3]).
 
+-spec render_test_() -> any().
 render_test_() ->
-    [?_assertEqual(34, length(?DEFAULT_MODULES))
-     %% ,test_rendering(teletype_account_zone_change)
-     %% ,test_rendering(teletype_cnam_request)
-     %% ,test_rendering(teletype_customer_update)
-     %% ,test_rendering(teletype_denied_emergency_bridge)
-    ,test_rendering(teletype_deregister)
-     %% ,test_rendering(teletype_fax_inbound_error_to_email)
-     %% ,test_rendering(teletype_fax_inbound_to_email)
-     %% ,test_rendering(teletype_fax_outbound_error_to_email)
-     %% ,test_rendering(teletype_fax_outbound_smtp_error_to_email)
-     %% ,test_rendering(teletype_fax_outbound_to_email)
-     %% ,test_rendering(teletype_first_occurrence)
-    ,test_rendering(teletype_low_balance)
-     %% ,test_rendering(teletype_missed_call)
-    ,test_rendering(teletype_new_account)
-    ,test_rendering(teletype_new_user)
-     %% ,test_rendering(teletype_password_recovery)
-     %% ,test_rendering(teletype_port_cancel)
-     %% ,test_rendering(teletype_port_comment)
-     %% ,test_rendering(teletype_port_pending)
-     %% ,test_rendering(teletype_port_rejected)
-     %% ,test_rendering(teletype_port_request)
-     %% ,test_rendering(teletype_port_request_admin)
-     %% ,test_rendering(teletype_port_scheduled)
-     %% ,test_rendering(teletype_port_unconfirmed)
-     %% ,test_rendering(teletype_ported)
-    ,test_rendering(teletype_service_added)
-    ,test_rendering(teletype_system_alert)
-     %% ,test_rendering(teletype_topup)
-     %% ,test_rendering(teletype_transaction)
-     %% ,test_rendering(teletype_voicemail_full)
-     %% ,test_rendering(teletype_voicemail_to_email)
-     %% ,test_rendering(teletype_webhook_disabled)
-    ].
+    {setup
+    ,fun setup_test/0
+    ,fun teardown/1
+    ,fun(_ReturnOfSetup) ->
+             [?_assertEqual(34, length(?DEFAULT_MODULES))
+             %% ,test_rendering(teletype_account_zone_change)
+             %% ,test_rendering(teletype_cnam_request)
+             %% ,test_rendering(teletype_customer_update)
+             %% ,test_rendering(teletype_denied_emergency_bridge)
+             ,test_rendering(teletype_deregister)
+             %% ,test_rendering(teletype_fax_inbound_error_to_email)
+             %% ,test_rendering(teletype_fax_inbound_to_email)
+             %% ,test_rendering(teletype_fax_outbound_error_to_email)
+             %% ,test_rendering(teletype_fax_outbound_smtp_error_to_email)
+             %% ,test_rendering(teletype_fax_outbound_to_email)
+             %% ,test_rendering(teletype_first_occurrence)
+             ,test_rendering(teletype_low_balance)
+             %% ,test_rendering(teletype_missed_call)
+             ,test_rendering(teletype_new_account)
+             ,test_rendering(teletype_new_user)
+             %% ,test_rendering(teletype_password_recovery)
+             %% ,test_rendering(teletype_port_cancel)
+             %% ,test_rendering(teletype_port_comment)
+             %% ,test_rendering(teletype_port_pending)
+             %% ,test_rendering(teletype_port_rejected)
+             %% ,test_rendering(teletype_port_request)
+             %% ,test_rendering(teletype_port_request_admin)
+             %% ,test_rendering(teletype_port_scheduled)
+             %% ,test_rendering(teletype_port_unconfirmed)
+             %% ,test_rendering(teletype_ported)
+             ,test_rendering(teletype_service_added)
+             ,test_rendering(teletype_system_alert)
+             %% ,test_rendering(teletype_topup)
+             %% ,test_rendering(teletype_transaction)
+             %% ,test_rendering(teletype_voicemail_full)
+             %% ,test_rendering(teletype_voicemail_to_email)
+             %% ,test_rendering(teletype_webhook_disabled)
+             ]
+     end
+    }.
+
+setup_test() ->
+    ?LOG_DEBUG(":: Setting up Kazoo FixtureDB"),
+
+    {ok, _} = application:ensure_all_started(kazoo_config),
+    {ok, LinkPid} = kazoo_data_link_sup:start_link(),
+
+    lager:set_loglevel(lager_console_backend, none),
+    lager:set_loglevel(lager_file_backend, none),
+    lager:set_loglevel(lager_syslog_backend, none),
+
+    LinkPid.
+
+teardown(LinkPid) ->
+    _DataLink = erlang:exit(LinkPid, normal),
+    Ref = monitor(process, LinkPid),
+    receive
+        {'DOWN', Ref, process, LinkPid, _Reason} ->
+            _KConfig = application:stop(kazoo_config),
+            ?LOG_DEBUG(":: Stopped Kazoo FixtureDB, data_link: ~p kazoo_config: ~p", [_DataLink, _KConfig])
+    after 1000 ->
+            _KConfig = application:stop(kazoo_config),
+            ?LOG_DEBUG(":: Stopped Kazoo FixtureDB, data_link: timeout kazoo_config: ~p", [_KConfig])
+    end.
 
 test_rendering(Module) ->
     TemplateId = Module:id(),
     TemplateIdStr = binary_to_list(TemplateId),
-    Fixture = "notif__" ++ TemplateIdStr ++ ".json",
-    {ok,FixtureJObj} = kz_json:fixture(?APP, Fixture),
+    Fixture = "test/fixtures-api/notifications/" ++ TemplateIdStr ++ ".json",
+    {ok,FixtureJObj} = kz_json:fixture(kazoo_amqp, Fixture),
     DataJObj = kz_json:normalize(FixtureJObj),
     Macros = Module:macros(DataJObj),
     CTs = teletype_templates:master_content_types(TemplateId),

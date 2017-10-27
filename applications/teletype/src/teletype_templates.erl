@@ -201,12 +201,6 @@ templates_source(TemplateId, AccountId, AccountId) ->
         {'error', _E} -> 'undefined'
     end;
 templates_source(TemplateId, AccountId, ResellerId) ->
-    bypass_templates_source(TemplateId, AccountId, ResellerId).
-
--ifdef(TEST).
-bypass_templates_source(?NE_BINARY, ?MATCH_ACCOUNT_RAW(_), ?MATCH_ACCOUNT_RAW(_)) -> ?KZ_CONFIG_DB.
--else.
-bypass_templates_source(TemplateId, AccountId, ResellerId) ->
     case fetch_notification(TemplateId, AccountId) of
         {'error', 'not_found'} ->
             parent_templates_source(TemplateId, AccountId, ResellerId);
@@ -214,7 +208,6 @@ bypass_templates_source(TemplateId, AccountId, ResellerId) ->
             templates_source_has_attachments(TemplateId, AccountId, ResellerId, Template);
         {'error', _E} -> 'undefined'
     end.
--endif.
 
 -spec templates_source_has_attachments(ne_binary(), ne_binary(), ne_binary(), kz_json:object()) ->
                                               api_binary().
@@ -268,7 +261,7 @@ render_masters(TemplateId, Macros) ->
     ].
 
 master_content_types(TemplateId) ->
-    case from_system_config(TemplateId) of
+    case fetch_notification(TemplateId, ?KZ_CONFIG_DB) of
         {'ok', NotificationJObj} ->
             [kz_json:get_ne_binary_value(<<"content_type">>, AttachmentJObj)
              || {_,AttachmentJObj} <- kz_json:to_proplist(kz_doc:attachments(NotificationJObj))
@@ -277,18 +270,6 @@ master_content_types(TemplateId) ->
             lager:warning("failed to find master notification ~s", [TemplateId]),
             []
     end.
-
--ifdef(TEST).
-from_system_config(?NE_BINARY=TemplateId) ->
-    JObj = kz_json:from_list(lists:keymap(fun kz_term:to_binary/1, 1, params(TemplateId))),
-    FakeAttachments = kz_json:from_list_recursive(
-                        [{<<"template.text/html">>, [{<<"content_type">>, <<"text/html">>}]}
-                        ,{<<"template.text/plain">>, [{<<"content_type">>, <<"text/plain">>}]}
-                        ]),
-    {ok, kz_json:set_value(<<"_attachments">>, FakeAttachments, JObj)}.
--else.
-from_system_config(TemplateId) -> fetch_notification(TemplateId, ?KZ_CONFIG_DB).
--endif.
 
 -spec render_master(ne_binary(), ne_binary(), macros()) -> ne_binary().
 render_master(?NE_BINARY=TemplateId, ?NE_BINARY=ContentType, Macros) ->

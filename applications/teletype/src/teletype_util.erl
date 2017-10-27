@@ -348,25 +348,11 @@ user_params(UserJObj) ->
     Ks = [{<<"first_name">>, fun kzd_user:first_name/1}
          ,{<<"last_name">>, fun kzd_user:last_name/1}
          ,{<<"email">>, fun kzd_user:email/1}
-         ,{<<"timezone">>, fun timezone/1}
+         ,{<<"timezone">>, fun kzd_user:timezone/1}
          ],
     props:filter_undefined(
       [{Key, Fun(UserJObj)} || {Key, Fun} <- Ks]
      ).
-
--spec timezone(kzd_user:doc()) -> api_ne_binary().
--ifdef(TEST).
-timezone(UserJObj) ->
-    case kz_doc:account_id(UserJObj) of
-        ?AN_ACCOUNT_ID ->
-            {ok,AccountJObj} = kz_json:fixture(?APP, "an_account.json"),
-            kz_account:timezone(AccountJObj);
-        _ ->
-            kzd_user:timezone(UserJObj)
-    end.
--else.
-timezone(UserJObj) -> kzd_user:timezone(UserJObj).
--endif.
 
 -spec account_params(kz_json:object()) -> kz_proplist().
 account_params(DataJObj) ->
@@ -382,7 +368,7 @@ account_params(DataJObj) ->
 -spec find_account_params(api_binary()) -> kz_proplist().
 find_account_params('undefined') -> [];
 find_account_params(AccountId) ->
-    case fetch_account_for_params(AccountId) of
+    case kz_account:fetch(AccountId) of
         {'ok', AccountJObj} ->
             props:filter_undefined(
               [{<<"name">>, kz_account:name(AccountJObj)}
@@ -397,21 +383,13 @@ find_account_params(AccountId) ->
             []
     end.
 
--ifdef(TEST).
-fetch_account_for_params(?AN_ACCOUNT_ID) -> kz_json:fixture(?APP, "an_account.json");
-fetch_account_for_params(?A_MASTER_ACCOUNT_ID) -> kz_json:fixture(?APP, "a_master_account.json");
-fetch_account_for_params(?MATCH_ACCOUNT_RAW(_)) -> {error, testing_too_hard}.
--else.
-fetch_account_for_params(AccountId) -> kz_account:fetch(AccountId).
--endif.
-
 -spec maybe_add_parent_params(ne_binary(), kz_json:object()) -> kz_proplist().
 maybe_add_parent_params(AccountId, AccountJObj) ->
     case kz_account:parent_account_id(AccountJObj) of
         'undefined' -> [];
         AccountId -> [];
         ParentAccountId ->
-            {'ok', ParentAccountJObj} = fetch_account_for_params(ParentAccountId),
+            {'ok', ParentAccountJObj} = kz_account:fetch(ParentAccountId),
             [{<<"parent_name">>, kz_account:name(ParentAccountJObj)}
             ,{<<"parent_realm">>, kz_account:realm(ParentAccountJObj)}
             ,{<<"parent_id">>, kz_account:id(ParentAccountJObj)}
@@ -542,12 +520,7 @@ extract_admin_emails(Users) ->
     ].
 
 -spec find_reseller_id(ne_binary()) -> ne_binary().
--ifdef(TEST).
-find_reseller_id(?AN_ACCOUNT_ID) -> ?A_MASTER_ACCOUNT_ID;
-find_reseller_id(?MATCH_ACCOUNT_RAW(_)) -> <<"you_are_testing_too_far">>.
--else.
 find_reseller_id(AccountId) -> kz_services:find_reseller_id(AccountId).
--endif.
 
 -spec find_account_admin(api_binary()) -> api_object().
 -spec find_account_admin(ne_binary(), ne_binary()) -> 'undefined' | kzd_user:doc().
@@ -565,7 +538,11 @@ find_account_admin(AccountId, ResellerId) ->
 
 -spec query_for_account_admin(ne_binary()) -> 'undefined' | kzd_user:doc().
 query_for_account_admin(AccountId) ->
-    case account_users(AccountId) of
+    AccountDb = kz_util:format_account_db(AccountId),
+    ViewOptions = [{'key', <<"user">>}
+                  ,'include_docs'
+                  ],
+    case kz_datamgr:get_results(AccountDb, <<"maintenance/listing_by_type">>, ViewOptions) of
         {'ok', []} -> 'undefined';
         {'ok', Users} ->
             case filter_for_admins(Users) of
@@ -576,20 +553,6 @@ query_for_account_admin(AccountId) ->
             ?LOG_DEBUG("failed to find users in ~s: ~p", [AccountId, _E]),
             'undefined'
     end.
-
--ifdef(TEST).
-account_users(?AN_ACCOUNT_ID) ->
-    {ok,UserJObj0} = kz_json:fixture(?APP, "an_account_user.json"),
-    UserJObj = kzd_user:set_priv_level(<<"admin">>, UserJObj0),
-    {ok, [kz_json:from_list([{<<"doc">>, UserJObj}])]}.
--else.
-account_users(AccountId) ->
-    AccountDb = kz_util:format_account_db(AccountId),
-    ViewOptions = [{'key', <<"user">>}
-                  ,'include_docs'
-                  ],
-    kz_datamgr:get_results(AccountDb, <<"maintenance/listing_by_type">>, ViewOptions).
--endif.
 
 -spec filter_for_admins(kz_json:objects()) -> kzd_user:docs().
 filter_for_admins(Users) ->
