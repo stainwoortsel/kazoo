@@ -16,7 +16,7 @@
 
 -spec start() -> {'ok', pid()}.
 start() ->
-    {ok, _} -> application:ensure_all_started(kazoo_config),
+    {ok, _} = application:ensure_all_started(kazoo_config),
     kazoo_data_link_sup:start_link().
 
 %% ===================================================================
