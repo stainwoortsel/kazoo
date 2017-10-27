@@ -18,9 +18,15 @@
 
         ,docs_dir/1, views_dir/1
 
-        ,update_revision/1
+        ,update_doc/1
 
         ,encode_query_filename/2
+
+        %% utilities for calling from shell
+        ,get_doc_path/3, get_view_path/4, get_att_path/4
+        ,add_view_path_to_index/4, add_att_path_to_index/4
+
+        ,update_pvt_doc_hash/1
         ]).
 
 -include("kz_fixturedb.hrl").
@@ -44,26 +50,26 @@ format_error(Other) -> Other.
 open_json(Db, DocId) ->
     kz_json:fixture(doc_path(Db, DocId)).
 
+-spec open_attachment(db_map(), ne_binary(), ne_binary()) -> {ok, binary()} | {error, not_found}.
+open_attachment(Db, DocId, AName) ->
+    read_file(att_path(Db, DocId, AName)).
+
+-spec open_view(db_map(), ne_binary(), kz_data:options()) -> docs_resp().
+open_view(Db, Design, Options) ->
+    kz_json:fixture(view_path(Db, Design, Options)).
+
 -spec doc_path(db_map(), ne_binary()) -> file:filename_all().
 doc_path(#{server := #{url := Url}, name := DbName}, DocId) ->
     filename:join(kz_term:to_list(Url) ++ "/" ++ kz_term:to_list(DbName)
                  ,["docs/", http_uri:encode(kz_term:to_list(DocId)), ".json"]
                  ).
 
--spec open_attachment(db_map(), ne_binary(), ne_binary()) -> {ok, binary()} | {error, not_found}.
-open_attachment(Db, DocId, AName) ->
-    read_file(att_path(Db, DocId, AName)).
-
 -spec att_path(db_map(), ne_binary(), ne_binary()) -> file:filename_all().
 att_path(#{server := #{url := Url}, name := DbName}, DocId, AName) ->
-    AttName = http_uri:encode(AName),
+    AttName = kz_binary:hexencode(crypto:hash(md5, <<DocId/binary, AName/binary>>)),
     filename:join(kz_term:to_list(Url) ++ "/" ++ kz_term:to_list(DbName)
-                 ,["docs/", http_uri:encode(kz_term:to_list(DocId)), AttName]
+                 ,["docs/", kz_term:to_list(AttName), ".att"]
                  ).
-
--spec open_view(db_map(), ne_binary(), kz_data:options()) -> docs_resp().
-open_view(Db, Design, Options) ->
-    kz_json:fixture(view_path(Db, Design, Options)).
 
 -spec view_path(db_map(), ne_binary(), kz_data:options()) -> file:filename_all().
 view_path(#{server := #{url := Url}, name := DbName}, Design, Options) ->
@@ -74,7 +80,7 @@ view_path(#{server := #{url := Url}, name := DbName}, Design, Options) ->
 %% @doc
 %% The idea is to encode file name based on view options so you can
 %% write JSON file specifically for each of your view queries
--spec encode_query_filename(ne_binary(), kz_data:options()) -> ne_binary().
+-spec encode_query_filename(ne_binary(), kz_data:options()) -> text().
 encode_query_filename(Design, Options) ->
     encode_query_options(Design, ?DANGEROUS_VIEW_OPTS, Options, []).
 
@@ -85,6 +91,13 @@ docs_dir(#{server := #{url := Url}, name := DbName}) ->
 -spec views_dir(db_map()) -> text().
 views_dir(#{server := #{url := Url}, name := DbName}) ->
     kz_term:to_list(<<Url/binary, "/", DbName/binary, "/views">>).
+
+-spec update_doc(kz_json:object()) -> kz_json:object().
+update_doc(JObj) ->
+    Funs = [fun update_revision/1
+           ,fun(J) -> kz_doc:set_document_hash(J, kz_doc:calculate_document_hash(J)) end
+           ],
+    lists:foldl(fun(F, J) -> F(J) end, JObj, Funs).
 
 -spec update_revision(kz_json:object()) -> kz_json:object().
 update_revision(JObj) ->
@@ -98,6 +111,67 @@ update_revision(JObj) ->
     end.
 
 %%%===================================================================
+%%% Handy functions to use from shell to managing files
+%%%===================================================================
+
+-spec get_doc_path(map(), ne_binary(), ne_binary()) -> file:filename_all().
+get_doc_path(#{server := {_, Conn}}=_Plan, DbName, DocId) ->
+    doc_path(kz_fixturedb_server:get_db(Conn, DbName), DocId).
+
+-spec get_att_path(map(), ne_binary(), ne_binary(), ne_binary()) -> file:filename_all().
+get_att_path(#{server := {_, Conn}}=_Plan, DbName, DocId, AName) ->
+    att_path(kz_fixturedb_server:get_db(Conn, DbName), DocId, AName).
+
+-spec get_view_path(map(), ne_binary(), ne_binary(), kz_proplist()) -> file:filename_all().
+get_view_path(#{server := {_, Conn}}=_Plan, DbName, Design, Options) ->
+    view_path(kz_fixturedb_server:get_db(Conn, DbName), Design, Options).
+
+-spec add_att_path_to_index(map(), ne_binary(), ne_binary(), ne_binary()) -> {ok, binary()} | {error, any()}.
+add_att_path_to_index(#{server := {_, Conn}}=_Plan, DbName, DocId, AName) ->
+    #{server := #{url := Url}} = Db = kz_fixturedb_server:get_db(Conn, DbName),
+    AttPath = att_path(Db, DocId, AName),
+    Row = kz_term:to_binary(io_lib:format("~s, ~s, ~s~n", [DocId, AName, filename:basename(AttPath)])),
+    Header = <<"doc_id, attachment_name, attachment_file_name\n">>,
+    IndexPath = index_file_path("attachment", Url, DbName),
+    case index_has_header(IndexPath) of
+        'true' -> write_append_file(IndexPath, Row);
+        'false' -> write_append_file(IndexPath, <<Header/binary, Row/binary>>)
+    end.
+
+-spec add_view_path_to_index(map(), ne_binary(), ne_binary(), kz_proplist()) -> {ok, binary()} | {error, any()}.
+add_view_path_to_index(#{server := {_, Conn}}=_Plan, DbName, Design, Options) ->
+    #{server := #{url := Url}} = Db = kz_fixturedb_server:get_db(Conn, DbName),
+    ViewPath = view_path(Db, Design, Options),
+    Row = kz_term:to_binary(io_lib:format("~s, ~1000p, ~s~n", [Design, Options, filename:basename(ViewPath)])),
+    Header = <<"view_name, view_options, view_file_name\n">>,
+    IndexPath = index_file_path("view", Url, DbName),
+    case index_has_header(IndexPath) of
+        'true' -> write_append_file(IndexPath, Row);
+        'false' -> write_append_file(IndexPath, <<Header/binary, Row/binary>>)
+    end.
+
+-spec index_file_path(text(), ne_binary(), ne_binary()) -> text().
+index_file_path(Mode, Url, DbName) ->
+    kz_term:to_list(Url) ++ "/" ++ kz_term:to_list(DbName) ++ "/" ++ Mode ++ "-index.csv".
+
+-spec index_has_header(text()) -> boolean().
+index_has_header(Path) ->
+    case file:read_file(Path) of
+        {ok, <<>>} -> 'false';
+        {error, _} -> 'false';
+        {ok, _} -> 'true'
+    end.
+
+-spec update_pvt_doc_hash(text() | ne_binary()) -> ne_binary().
+update_pvt_doc_hash(Path) ->
+    case kz_json:fixture(Path) of
+        {ok, JObj} ->
+            NewJObj = kz_doc:set_document_hash(JObj, kz_doc:calculate_document_hash(JObj)),
+            file:write_file(Path, kz_json:encode(NewJObj, [pretty]));
+        {error, _}=Error -> Error
+    end.
+
+%%%===================================================================
 %%% Internal functions
 %%%===================================================================
 
@@ -106,6 +180,13 @@ read_file(Path) ->
     case file:read_file(Path) of
         {ok, _}=OK -> OK;
         {error, _} -> {error, not_found}
+    end.
+
+-spec write_append_file(file:filename_all(), binary()) -> {ok, binary()} | {error, not_found}.
+write_append_file(Path, Contents) ->
+    case file:write_file(Path, Contents, [append]) of
+        'ok' -> Contents;
+        {error, _}=Error -> Error
     end.
 
 -spec encode_query_options(ne_binary(), list(), kz_data:options(), list()) -> text().

@@ -45,15 +45,15 @@ save_doc(Server, DbName, Doc, Options) when not is_list(Doc) ->
             DocRev = kz_doc:revision(Doc),
             JObjRev = kz_doc:revision(JObj),
             case {DocRev, JObjRev} of
-                {'undefined', _} -> {'ok', kz_fixturedb_util:update_revision(kz_doc:set_revision(Doc, JObjRev))};
-                {_, 'undefined'} -> {'ok', kz_fixturedb_util:update_revision(Doc)};
-                {DocRev, JObjRev} -> {'ok', kz_fixturedb_util:update_revision(Doc)};
+                {'undefined', _} -> {'ok', kz_fixturedb_util:update_doc(kz_doc:set_revision(Doc, JObjRev))};
+                {_, 'undefined'} -> {'ok', kz_fixturedb_util:update_doc(Doc)};
+                {DocRev, JObjRev} -> {'ok', kz_fixturedb_util:update_doc(Doc)};
                 {_, _} -> {'error', 'conflict'}
             end;
         {'error', _} ->
             case kz_fixturedb_db:db_exists(Server, DbName) of
                 'false' -> {'error', 'not_found'};
-                'true' -> {'ok', kz_fixturedb_util:update_revision(Doc)}
+                'true' -> {'ok', kz_fixturedb_util:update_doc(Doc)}
             end
     end.
 
