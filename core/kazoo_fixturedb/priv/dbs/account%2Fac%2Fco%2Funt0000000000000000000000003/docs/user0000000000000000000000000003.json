@@ -87,16 +87,16 @@
     },
     "caller_id": {
         "emergency": {
-            "name": "user-emergency-name",
-            "number": "user-emergency-number"
+            "name": "3001-emergency-name",
+            "number": "3001-emergency-number"
         },
         "external": {
-            "name": "user-external-name",
-            "number": "user-external-number"
+            "name": "3001-external-name",
+            "number": "3001-external-number"
         },
         "internal": {
-            "name": "user-internal-name",
-            "number": "user-internal-number"
+            "name": "3001-internal-name",
+            "number": "3001-internal-number"
         }
     },
     "contact_list": {
@@ -115,7 +115,7 @@
     "do_no_disturb": {
         "enabled": false
     },
-    "email": "test@2600hz.local",
+    "email": "test-3001@2600hz.local",
     "enabled": true,
     "first_name": "User",
     "hotdesk": {
@@ -125,7 +125,7 @@
         "pin": "1234",
         "require_pin": true
     },
-    "language": "mk-bs",
+    "language": "en-US",
     "last_name": "Three",
     "media": {
         "audio": {
@@ -216,7 +216,7 @@
             "user_new_static_flag"
         ]
     },
-    "presence_id": "user-3@4a6863.sip.2600hz.local",
+    "presence_id": "3001",
     "priv_level": "admin",
     "pronounced_name": {
         "media_id": "media000000000000000000000000004"
@@ -226,6 +226,7 @@
     "pvt_auth_account_id": "account0000000000000000000000003",
     "pvt_auth_user_id": "user0000000000000000000000000003",
     "pvt_created": 63645260666,
+    "pvt_document_hash": "7eee6c72e42c80ecbed9293993843045",
     "pvt_is_authenticated": true,
     "pvt_modified": 63645260666,
     "pvt_request_id": "request0000000000000000000000001",
@@ -237,7 +238,7 @@
         "external": "<http://192.168.0.231/Device1/MyRing1.wav>;info=Callers",
         "internal": "<http://192.168.0.231/Device1/MyRing2.wav>;info=Friends"
     },
-    "timezone": "Europe/Moscow",
+    "timezone": "Europe/Paris",
     "user_type": "sip_user",
     "username": "userthree",
     "verified": true,

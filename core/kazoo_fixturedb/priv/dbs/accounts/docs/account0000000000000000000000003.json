@@ -164,7 +164,6 @@
         ]
     },
     "enabled": true,
-    "is_reseller": true,
     "language": "en-US",
     "metaflows": {
         "binding_digit": "*",
@@ -251,6 +250,7 @@
     "pvt_auth_account_id": "account0000000000000000000000001",
     "pvt_auth_user_id": "user0000000000000000000000000001",
     "pvt_created": 63636183145,
+    "pvt_document_hash": "e1214310883a11d50316dd643448aa51",
     "pvt_enabled": true,
     "pvt_is_authenticated": true,
     "pvt_modified": 63667898685,

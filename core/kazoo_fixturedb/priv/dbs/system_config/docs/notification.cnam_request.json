@@ -1,0 +1,158 @@
+{
+  "_id" : "notification.cnam_request",
+  "_rev" : "169-fecc6a70d1f7bd4e3400bdd7a96cb1df",
+  "pvt_account_id" : "system_config",
+  "pvt_account_db" : "system_config",
+  "pvt_created" : 63675350015,
+  "pvt_modified" : 63675350015,
+  "pvt_type" : "notification",
+  "pvt_node" : "kazoo_apps@example.com",
+  "pvt_document_hash" : "cd9bb215cd5161c1628a19fd3597f2db",
+  "macros" : {
+    "request.number" : {
+      "i18n_label" : "request_number",
+      "friendly_name" : "Number",
+      "description" : "Number to add CNAM"
+    },
+    "cnam.display_name" : {
+      "i18n_label" : "cnam_display_name",
+      "friendly_name" : "Display Name",
+      "description" : "What to display"
+    },
+    "request.number_state" : {
+      "i18n_label" : "request_number_state",
+      "friendly_name" : "Number State",
+      "description" : "Number state"
+    },
+    "request.local_number" : {
+      "i18n_label" : "request_local_number",
+      "friendly_name" : "Local Number",
+      "description" : "Is a local number"
+    },
+    "request.acquired_for" : {
+      "i18n_label" : "request_acquired_for",
+      "friendly_name" : "Acquired For",
+      "description" : "Who authorized the request"
+    },
+    "user.first_name" : {
+      "i18n_label" : "user_first_name",
+      "friendly_name" : "First Name",
+      "description" : "First name of the user"
+    },
+    "user.last_name" : {
+      "i18n_label" : "user_last_name",
+      "friendly_name" : "Last Name",
+      "description" : "Last name of the user"
+    },
+    "user.email" : {
+      "i18n_label" : "user_email",
+      "friendly_name" : "Email",
+      "description" : "Email of the user"
+    },
+    "user.timezone" : {
+      "i18n_label" : "user_timezone",
+      "friendly_name" : "Timezone",
+      "description" : "Timezone of the user"
+    },
+    "user.username" : {
+      "i18n_label" : "username",
+      "friendly_name" : "Username",
+      "description" : "Username"
+    },
+    "account.name" : {
+      "i18n_label" : "account_name",
+      "friendly_name" : "Account Name",
+      "description" : "Name of the account"
+    },
+    "account.realm" : {
+      "i18n_label" : "account_realm",
+      "friendly_name" : "Account Realm",
+      "description" : "SIP Realm of the account"
+    },
+    "account.id" : {
+      "i18n_label" : "account_id",
+      "friendly_name" : "Account ID",
+      "description" : "Account ID"
+    },
+    "account.language" : {
+      "i18n_label" : "account_language",
+      "friendly_name" : "Account Language",
+      "description" : "Account Language"
+    },
+    "account.timezone" : {
+      "i18n_label" : "account_timezone",
+      "friendly_name" : "Account Timezone",
+      "description" : "Account Timezone"
+    },
+    "account.parent_id" : {
+      "i18n_label" : "account_parent_id",
+      "friendly_name" : "Parent Account ID",
+      "description" : "Parent Account ID"
+    },
+    "account.parent_name" : {
+      "i18n_label" : "account_parent_name",
+      "friendly_name" : "Parent Account Name",
+      "description" : "Parent Account Name"
+    },
+    "account.parent_realm" : {
+      "i18n_label" : "account_parent_realm",
+      "friendly_name" : "Parent Account Realm",
+      "description" : "Parent Account Realm"
+    },
+    "system.hostname" : {
+      "i18n_label" : "system_hostname",
+      "friendly_name" : "Hostname",
+      "description" : "Hostname of system generating the email"
+    },
+    "system.encoded_hostname" : {
+      "i18n_label" : "system_encoded_hostname",
+      "friendly_name" : "Encoded Hostname",
+      "description" : "Hostname of system generating the email, encoded to not reveal the real value"
+    },
+    "system.node" : {
+      "i18n_label" : "system_node",
+      "friendly_name" : "Node",
+      "description" : "Node name of system generating the email"
+    },
+    "system.encoded_node" : {
+      "i18n_label" : "system_encoded_node",
+      "friendly_name" : "Encoded Node",
+      "description" : "Node name of system generating the email, encoded to not reveal the real value"
+    }
+  },
+  "subject" : "Caller name update request for {{request.number}}",
+  "category" : "account",
+  "friendly_name" : "CNAM Request",
+  "to" : {
+    "type" : "admins"
+  },
+  "from" : "no-reply@example.com",
+  "cc" : {
+    "type" : "specified",
+    "email_addresses" : [
+      
+    ]
+  },
+  "bcc" : {
+    "type" : "specified",
+    "email_addresses" : [
+      
+    ]
+  },
+  "_attachments" : {
+    "template.text/html" : {
+      "content_type" : "text/html",
+      "revpos" : 168,
+      "digest" : "md5-OxjB8+RtczHzCENC0NGg1Q==",
+      "length" : 9851,
+      "stub" : true
+    },
+    "template.text/plain" : {
+      "content_type" : "text/plain",
+      "revpos" : 167,
+      "digest" : "md5-DaBPBysHdhG/ifkmb8zC6Q==",
+      "length" : 738,
+      "stub" : true
+    }
+  }
+}
