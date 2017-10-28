@@ -1176,7 +1176,7 @@ load_fixture_from_file(App, Dir, File) ->
 fixture(Path) ->
     case file:read_file(Path) of
         {ok, Bin} -> {ok, decode(Bin)};
-        {error, _R}=Error -> Error
+        {error, _} -> {error, not_found}
     end.
 
 -spec fixture(atom(), file:filename_all()) -> {ok, object()} | {error, not_found}.
