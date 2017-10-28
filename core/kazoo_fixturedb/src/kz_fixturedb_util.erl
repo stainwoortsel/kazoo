@@ -23,10 +23,13 @@
         ,encode_query_filename/2
 
         %% utilities for calling from shell
+        ,get_doc_path/2, get_view_path/3, get_att_path/3
         ,get_doc_path/3, get_view_path/4, get_att_path/4
+
+        ,add_view_path_to_index/3, add_att_path_to_index/3
         ,add_view_path_to_index/4, add_att_path_to_index/4
 
-        ,update_pvt_doc_hash/1
+        ,update_pvt_doc_hash/0, update_pvt_doc_hash/1
         ]).
 
 -include("kz_fixturedb.hrl").
@@ -36,10 +39,10 @@
 %%%===================================================================
 
 -spec format_error(any()) -> any().
-format_error('timeout') -> 'timeout';
-format_error('conflict') -> 'conflict';
-format_error('not_found') -> 'not_found';
-format_error('db_not_found') -> 'db_not_found';
+format_error(timeout) -> timeout;
+format_error(conflict) -> conflict;
+format_error(not_found) -> not_found;
+format_error(db_not_found) -> db_not_found;
 format_error(Other) -> Other.
 
 %%%===================================================================
@@ -56,6 +59,8 @@ open_attachment(Db, DocId, AName) ->
 
 -spec open_view(db_map(), ne_binary(), kz_data:options()) -> docs_resp().
 open_view(Db, Design, Options) ->
+    %% ?LOG_DEBUG("~nDb ~p~n Design ~p~n Options ~p~n Path ~p~n"
+    %%           ,[Db, Design, Options, view_path(Db, Design, Options)]),
     kz_json:fixture(view_path(Db, Design, Options)).
 
 -spec doc_path(db_map(), ne_binary()) -> file:filename_all().
@@ -102,7 +107,7 @@ update_doc(JObj) ->
 -spec update_revision(kz_json:object()) -> kz_json:object().
 update_revision(JObj) ->
     case kz_json:get_value(<<"_rev">>, JObj) of
-        'undefined' ->
+        undefined ->
             kz_doc:set_revision(JObj, <<"1-", (kz_binary:rand_hex(16))/binary>>);
         Rev ->
             [RevPos|_] = binary:split(Rev, <<"-">>),
@@ -114,17 +119,37 @@ update_revision(JObj) ->
 %%% Handy functions to use from shell to managing files
 %%%===================================================================
 
+-spec get_doc_path(ne_binary(), ne_binary()) -> file:filename_all().
+get_doc_path(DbName, DocId) ->
+    Plan = kzs_plan:plan(DbName),
+    get_doc_path(Plan, DbName, DocId).
+
 -spec get_doc_path(map(), ne_binary(), ne_binary()) -> file:filename_all().
 get_doc_path(#{server := {_, Conn}}=_Plan, DbName, DocId) ->
     doc_path(kz_fixturedb_server:get_db(Conn, DbName), DocId).
+
+-spec get_att_path(ne_binary(), ne_binary(), ne_binary()) -> file:filename_all().
+get_att_path(DbName, DocId, AName) ->
+    Plan = kzs_plan:plan(DbName),
+    get_att_path(Plan, DbName, DocId, AName).
 
 -spec get_att_path(map(), ne_binary(), ne_binary(), ne_binary()) -> file:filename_all().
 get_att_path(#{server := {_, Conn}}=_Plan, DbName, DocId, AName) ->
     att_path(kz_fixturedb_server:get_db(Conn, DbName), DocId, AName).
 
+-spec get_view_path(ne_binary(), ne_binary(), kz_proplist()) -> file:filename_all().
+get_view_path(DbName, Design, Options) ->
+    Plan = kzs_plan:plan(DbName),
+    get_view_path(Plan, DbName, Design, Options).
+
 -spec get_view_path(map(), ne_binary(), ne_binary(), kz_proplist()) -> file:filename_all().
 get_view_path(#{server := {_, Conn}}=_Plan, DbName, Design, Options) ->
     view_path(kz_fixturedb_server:get_db(Conn, DbName), Design, Options).
+
+-spec add_att_path_to_index(ne_binary(), ne_binary(), ne_binary()) -> {ok, binary()} | {error, any()}.
+add_att_path_to_index(DbName, DocId, AName) ->
+    Plan = kzs_plan:plan(DbName),
+    add_att_path_to_index(Plan, DbName, DocId, AName).
 
 -spec add_att_path_to_index(map(), ne_binary(), ne_binary(), ne_binary()) -> {ok, binary()} | {error, any()}.
 add_att_path_to_index(#{server := {_, Conn}}=_Plan, DbName, DocId, AName) ->
@@ -134,9 +159,14 @@ add_att_path_to_index(#{server := {_, Conn}}=_Plan, DbName, DocId, AName) ->
     Header = <<"doc_id, attachment_name, attachment_file_name\n">>,
     IndexPath = index_file_path("attachment", Url, DbName),
     case index_has_header(IndexPath) of
-        'true' -> write_append_file(IndexPath, Row);
-        'false' -> write_append_file(IndexPath, <<Header/binary, Row/binary>>)
+        true -> write_append_file(IndexPath, Row);
+        false -> write_append_file(IndexPath, <<Header/binary, Row/binary>>)
     end.
+
+-spec add_view_path_to_index(ne_binary(), ne_binary(), kz_proplist()) -> {ok, binary()} | {error, any()}.
+add_view_path_to_index(DbName, Design, Options) ->
+    Plan = kzs_plan:plan(DbName),
+    add_view_path_to_index(Plan, DbName, Design, Options).
 
 -spec add_view_path_to_index(map(), ne_binary(), ne_binary(), kz_proplist()) -> {ok, binary()} | {error, any()}.
 add_view_path_to_index(#{server := {_, Conn}}=_Plan, DbName, Design, Options) ->
@@ -146,8 +176,8 @@ add_view_path_to_index(#{server := {_, Conn}}=_Plan, DbName, Design, Options) ->
     Header = <<"view_name, view_options, view_file_name\n">>,
     IndexPath = index_file_path("view", Url, DbName),
     case index_has_header(IndexPath) of
-        'true' -> write_append_file(IndexPath, Row);
-        'false' -> write_append_file(IndexPath, <<Header/binary, Row/binary>>)
+        true -> write_append_file(IndexPath, Row);
+        false -> write_append_file(IndexPath, <<Header/binary, Row/binary>>)
     end.
 
 -spec index_file_path(text(), ne_binary(), ne_binary()) -> text().
@@ -157,10 +187,16 @@ index_file_path(Mode, Url, DbName) ->
 -spec index_has_header(text()) -> boolean().
 index_has_header(Path) ->
     case file:read_file(Path) of
-        {ok, <<>>} -> 'false';
-        {error, _} -> 'false';
-        {ok, _} -> 'true'
+        {ok, <<>>} -> false;
+        {error, _} -> false;
+        {ok, _} -> true
     end.
+
+-spec update_pvt_doc_hash() -> ok.
+update_pvt_doc_hash() ->
+    Paths = filelib:wildcard(code:priv_dir(kazoo_fixturedb) ++ "/dbs/*/docs/*.json"),
+    _ = [update_pvt_doc_hash(Path) || Path <- Paths],
+    ok.
 
 -spec update_pvt_doc_hash(text() | ne_binary()) -> ne_binary().
 update_pvt_doc_hash(Path) ->
@@ -185,7 +221,7 @@ read_file(Path) ->
 -spec write_append_file(file:filename_all(), binary()) -> {ok, binary()} | {error, not_found}.
 write_append_file(Path, Contents) ->
     case file:write_file(Path, Contents, [append]) of
-        'ok' -> Contents;
+        ok -> Contents;
         {error, _}=Error -> Error
     end.
 
