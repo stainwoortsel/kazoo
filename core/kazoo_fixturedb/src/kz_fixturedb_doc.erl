@@ -23,7 +23,7 @@
 %%% Document operations
 %%%===================================================================
 
--spec open_doc(server_map(), ne_binary(), ne_binary(), kz_data:options()) -> doc_resp().
+-spec open_doc(server_map(), ne_binary(), api_ne_binary(), kz_data:options()) -> doc_resp().
 open_doc(Server, DbName, DocId, _Options) ->
     Db = kz_fixturedb_server:get_db(Server, DbName),
     case kz_term:is_empty(DocId) of
@@ -40,7 +40,7 @@ lookup_doc_rev(Server, DbName, DocId) ->
 
 -spec save_doc(server_map(), ne_binary(), kz_data:document(), kz_data:options()) -> doc_resp().
 save_doc(Server, DbName, Doc, Options) when not is_list(Doc) ->
-    case open_doc(Server, DbName, Doc, Options) of
+    case open_doc(Server, DbName, kz_doc:id(Doc), Options) of
         {'ok', JObj} ->
             DocRev = kz_doc:revision(Doc),
             JObjRev = kz_doc:revision(JObj),
