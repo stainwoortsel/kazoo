@@ -274,18 +274,11 @@ fetch_services_doc(?UNRELATED_ACCOUNT_ID, _NotFromCache)
 fetch_services_doc(?WRONG_ACCOUNT_ID, _NotFromCache)
   when is_boolean(_NotFromCache); _NotFromCache =:= cache_failures ->
     {error, wrong};
-fetch_services_doc(<<"009afc511c97b2ae693c6cc4920988e8">>, _NotFromCache)
-  when is_boolean(_NotFromCache); _NotFromCache =:= cache_failures ->
-    {ok, ServicesJObj0} = kz_json:fixture(?APP, "a_sub_services.json"),
-    {ok
-    ,kz_json:set_values([{<<"_id">>, <<"009afc511c97b2ae693c6cc4920988e8">>}
-                        ,{<<"billing_id">>, <<"009afc511c97b2ae693c6cc4920988e8">>}
-                        ,{<<"pvt_account_id">>, <<"009afc511c97b2ae693c6cc4920988e8">>}
-                        ,{<<"pvt_account_db">>, kz_util:format_account_db(<<"009afc511c97b2ae693c6cc4920988e8">>)}
-                        ,{<<"pvt_reseller_id">>, <<"6b71cb72c876b5b1396a335f8f8a2594">>}
-                        ,{<<"pvt_tree">>, [<<"6b71cb72c876b5b1396a335f8f8a2594">>]}
-                        ], ServicesJObj0)
-    }.
+fetch_services_doc(?MATCH_ACCOUNT_RAW(AccountId), _NotFromCache) ->
+    case kz_datamgr:open_doc(?KZ_SERVICES_DB, AccountId) of
+        {ok, _}=OK -> OK;
+        {error, _}=E -> throw(E)
+    end.
 -else.
 fetch_services_doc(?MATCH_ACCOUNT_RAW(AccountId), cache_failures=Option) ->
     kz_datamgr:open_cache_doc(?KZ_SERVICES_DB, AccountId, [Option]);
@@ -1347,10 +1340,10 @@ cascade_quantities(#kz_services{cascade_quantities = JObj}) -> JObj.
 
 -spec cascade_quantities(ne_binary(), boolean()) -> kz_json:object().
 cascade_quantities(Account=?NE_BINARY, 'false') ->
-    ?LOG_DEBUG("computing cascade quantities for ~s", [Account]),
+    lager:debug("computing cascade quantities for ~s", [Account]),
     do_cascade_quantities(Account, <<"services/cascade_quantities">>);
 cascade_quantities(Account=?NE_BINARY, 'true') ->
-    ?LOG_DEBUG("computing reseller cascade quantities for ~s", [Account]),
+    lager:debug("computing reseller cascade quantities for ~s", [Account]),
     do_cascade_quantities(Account, <<"services/reseller_quantities">>).
 
 -spec do_cascade_quantities(ne_binary(), ne_binary()) -> kz_json:object().
@@ -1396,8 +1389,16 @@ cascade_results(<<"services/reseller_quantities">>, ?A_RESELLER_ACCOUNT_ID) ->
          ,?ITEM(<<"users">>, <<"admin">>, 1)
          ,?ITEM(<<"users">>, <<"user">>, 1)
          ]};
-cascade_results(<<"services/cascade_quantities">>, <<"009afc511c97b2ae693c6cc4920988e8">>) ->
-    {ok, []}.
+cascade_results(View, AccountId) ->
+    ViewOptions = ['group'
+                  ,'reduce'
+                  ,{'startkey', [AccountId]}
+                  ,{'endkey', [AccountId, kz_json:new()]}
+                  ],
+    case kz_datamgr:get_results(?KZ_SERVICES_DB, View, ViewOptions) of
+        {ok, _}=OK -> OK;
+        {error, _}=E -> throw(E)
+    end.
 -else.
 cascade_results(View, AccountId) ->
     ViewOptions = ['group'
