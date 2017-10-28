@@ -1,0 +1,2 @@
+view_name, view_options, view_file_name
+services/cascade_quantities, [group,reduce,{startkey,[<<"account0000000000000000000000003">>]},{endkey,[<<"account0000000000000000000000003">>,{[]}]}], services+cascade_quantities-dffd4eaab58007e68e839f620b80d77c.json
