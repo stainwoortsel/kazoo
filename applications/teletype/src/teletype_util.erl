@@ -47,8 +47,6 @@
 
         ,maybe_get_attachments/1
         ,fetch_attachment_from_url/1
-
-        ,template_config_cat/1
         ]).
 
 -include("teletype.hrl").
@@ -68,7 +66,7 @@
 send_email(Emails, Subject, RenderedTemplates) ->
     send_email(Emails, Subject, RenderedTemplates, []).
 send_email(Emails, Subject, RenderedTemplates, Attachments) ->
-    lager:debug("emails: ~p", [Emails]),
+    ?LOG_DEBUG("emails: ~p", [Emails]),
     To = props:get_value(<<"to">>, Emails),
     From = props:get_value(<<"from">>, Emails),
     Email = {<<"multipart">>
@@ -462,7 +460,8 @@ send_update(RespQ, MsgId, Status, Msg, Metadata) ->
              ,{<<"Metadata">>, Metadata}
               | kz_api:default_headers(?APP_NAME, ?APP_VERSION)
              ]),
-    ?LOG_DEBUG("notification update (~s) sending to ~s", [Status, RespQ]),
+    %% ?LOG_DEBUG("notification update (~s) sending to ~s", [Status, RespQ]),
+    lager:debug("notification update (~s) sending to ~s", [Status, RespQ]),
     kz_amqp_worker:cast(Prop, fun(P) -> kapi_notifications:publish_notify_update(RespQ, P) end).
 
 -spec find_account_rep_email(api_object() | ne_binary()) -> api_binaries().
@@ -669,15 +668,19 @@ find_address(DataJObj, TemplateMetaJObj, ConfigCat, Key) ->
                 ).
 
 find_address(DataJObj, TemplateMetaJObj, _ConfigCat, Key, 'undefined') ->
+    %% ?LOG_DEBUG("email type for '~s' not defined in template, checking just the key", [Key]),
     lager:debug("email type for '~s' not defined in template, checking just the key", [Key]),
     {Key, find_first_defined_address(Key, [Key], [DataJObj, TemplateMetaJObj])};
 find_address(DataJObj, TemplateMetaJObj, _ConfigCat, Key, ?EMAIL_SPECIFIED) ->
+    %% ?LOG_DEBUG("checking template for '~s' email addresses", [Key]),
     lager:debug("checking template for '~s' email addresses", [Key]),
     {Key, find_first_defined_address(Key, [[Key, <<"email_addresses">>], Key], [TemplateMetaJObj, DataJObj])};
 find_address(DataJObj, TemplateMetaJObj, _ConfigCat, Key, ?EMAIL_ORIGINAL) ->
+    %% ?LOG_DEBUG("checking data for '~s' email address(es)", [Key]),
     lager:debug("checking data for '~s' email address(es)", [Key]),
     {Key, find_first_defined_address(Key, [Key, [Key, <<"email_addresses">>]], [DataJObj, TemplateMetaJObj])};
 find_address(DataJObj, _TemplateMetaJObj, ConfigCat, Key, ?EMAIL_ADMINS) ->
+    %% ?LOG_DEBUG("looking for admin emails for '~s'", [Key]),
     lager:debug("looking for admin emails for '~s'", [Key]),
     {Key, find_admin_emails(DataJObj, ConfigCat, Key)}.
 
@@ -715,7 +718,7 @@ check_address_value(JObj) ->
 find_admin_emails(DataJObj, ConfigCat, Key) ->
     case find_account_rep_email(kapi_notifications:account_id(DataJObj)) of
         'undefined' ->
-            lager:debug("didn't find account rep for '~s'", [Key]),
+            ?LOG_DEBUG("didn't find account rep for '~s'", [Key]),
             admin_emails_from_system_template(ConfigCat, Key);
         Emails -> Emails
     end.
@@ -733,7 +736,7 @@ admin_emails_from_system_template(ConfigCat, Key, JObj) ->
         'undefined' ->
             case check_address_value(kz_json:get_ne_value(Key, JObj)) of
                 'undefined' ->
-                    lager:debug("no default in ~s for default_~s", [ConfigCat, Key]),
+                    ?LOG_DEBUG("no default in ~s for default_~s", [ConfigCat, Key]),
                     'undefined';
                 Emails -> Emails
             end;
@@ -799,8 +802,8 @@ is_preview(DataJObj) ->
       kz_json:get_first_defined([<<"Preview">>, <<"preview">>], DataJObj, 'false')
      ).
 
-%% make timestamp ready to proccess by "date" filter in ErlyDTL
-%% returns a prop list with local, utc time and timezone
+%% make timestamp ready to process by "date" filter in ErlyDTL
+%% returns a prop list with local, UTC time and timezone
 -spec fix_timestamp(gregorian_seconds() | api_ne_binary()) -> kz_proplist().
 fix_timestamp(Timestamp) ->
     fix_timestamp(Timestamp, <<"UTC">>).
@@ -950,7 +953,3 @@ attachment_from_url_result(Headers, Body) ->
                    FileDisposition -> FileDisposition
                end,
     {CT, Filename, Body}.
-
--spec template_config_cat(ne_binary()) -> ne_binary().
-template_config_cat(TemplateId=?NE_BINARY) ->
-    ?TEMPLATE_CONFIG_CAT(TemplateId).

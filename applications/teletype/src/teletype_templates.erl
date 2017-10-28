@@ -85,7 +85,8 @@ compile_master_renderers(TemplateId) ->
     _ = [build_renderer(TemplateId, ContentType, Template)
          || {ContentType, Template} <- fetch_master_attachments(TemplateId)
         ],
-    ?LOG_DEBUG("built master renderer modules for ~s", [TemplateId]).
+    %% ?LOG_DEBUG("built master renderer modules for ~s", [TemplateId]).
+    lager:debug("built master renderer modules for ~s", [TemplateId]).
 
 -spec build_renderer(ne_binary(), ne_binary(), binary()) -> 'ok'.
 build_renderer(TemplateId, ContentType, Template) ->
@@ -181,7 +182,8 @@ templates_source(_TemplateId, 'undefined') ->
 templates_source(_TemplateId, ?KZ_CONFIG_DB) ->
     ?KZ_CONFIG_DB;
 templates_source(TemplateId, ?MATCH_ACCOUNT_RAW(AccountId)) ->
-    ?LOG_DEBUG("trying to fetch template ~s for ~s", [TemplateId, AccountId]),
+    %% ?LOG_DEBUG("trying to fetch template ~s for ~s", [TemplateId, AccountId]),
+    lager:debug("trying to fetch template ~s for ~s", [TemplateId, AccountId]),
     ResellerId = teletype_util:find_reseller_id(AccountId),
     templates_source(TemplateId, AccountId, ResellerId);
 templates_source(TemplateId, DataJObj) ->
@@ -383,7 +385,7 @@ update(TemplateJObj, Params) ->
     case update_from_params(TemplateJObj, Params) of
         {'false', _} -> lager:debug("no updates to template");
         {'true', UpdatedTemplateJObj} ->
-            lager:debug("template has updates to save"),
+            ?LOG_DEBUG("template has updates to save"),
             save(UpdatedTemplateJObj)
     end.
 
@@ -591,12 +593,12 @@ update_attachment(Contents, {IsUpdated, TemplateJObj}=Acc, ContentType, Id, ANam
     lager:debug("attachment ~s doesn't exist for ~s", [AName, Id]),
     case save_attachment(Id, AName, ContentType, Contents) of
         {'ok', AttachmentJObj} ->
-            lager:debug("saved attachment: ~p", [AttachmentJObj]),
+            ?LOG_DEBUG("saved attachment: ~p", [AttachmentJObj]),
             {'ok', UpdatedJObj} = kz_datamgr:open_doc(?KZ_CONFIG_DB, Id),
             Merged = kz_json:merge_jobjs(UpdatedJObj, TemplateJObj),
             {IsUpdated, Merged};
         {'error', _E} ->
-            lager:debug("failed to save attachment ~s: ~p", [AName, _E]),
+            ?LOG_DEBUG("failed to save attachment ~s: ~p", [AName, _E]),
             Acc
     end.
 

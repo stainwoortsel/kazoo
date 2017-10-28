@@ -50,13 +50,15 @@ render(Renderer, TemplateId, _Template, _TemplateData, 0) ->
 render(Renderer, TemplateId, Template, TemplateData, Tries) ->
     Start = kz_time:now_s(),
     PoolStatus = poolboy:status(teletype_sup:render_farm_name()),
-    ?LOG_INFO("starting render of ~p", [TemplateId]),
+    %% ?LOG_INFO("starting render of ~p", [TemplateId]),
+    lager:info("starting render of ~p", [TemplateId]),
     case do_render(Renderer, TemplateId, Template, TemplateData) of
         {'error', 'render_failed'} ->
             ?LOG_INFO("render failed in ~p, pool: ~p", [kz_time:now_s() - Start, PoolStatus]),
             render(Renderer, TemplateId, Template, TemplateData, Tries-1);
         GoodReturn ->
-            ?LOG_INFO("render completed in ~p, pool: ~p", [kz_time:now_s() - Start, PoolStatus]),
+            %% LOG_INFO("render completed in ~p, pool: ~p", [kz_time:now_s() - Start, PoolStatus]),
+            lager:info("render completed in ~p, pool: ~p", [kz_time:now_s() - Start, PoolStatus]),
             poolboy:checkin(teletype_sup:render_farm_name(), Renderer),
             GoodReturn
     end.
@@ -114,12 +116,14 @@ init(_) ->
     ModuleBin = <<"teletype_", Self/binary, "_", (kz_binary:rand_hex(4))/binary>>,
     Module = kz_term:to_atom(ModuleBin, true),
     kz_util:put_callid(Module),
-    ?LOG_DEBUG("starting template renderer, using ~s as compiled module name", [Module]),
+    %% ?LOG_DEBUG("starting template renderer, using ~s as compiled module name", [Module]),
+    lager:debug("starting template renderer, using ~s as compiled module name", [Module]),
     {'ok', Module}.
 
 -spec handle_call(any(), pid_ref(), state()) -> handle_call_ret_state(state()).
 handle_call({'render', _TemplateId, Template, TemplateData}, _From, TemplateModule) ->
-    ?LOG_DEBUG("trying to compile template ~s as ~s for ~w", [_TemplateId, TemplateModule, _From]),
+    %% l?LOG_DEBUG("trying to compile template ~s as ~s for ~w", [_TemplateId, TemplateModule, _From]),
+    lager:debug("trying to compile template ~s as ~s for ~w", [_TemplateId, TemplateModule, _From]),
     {'reply'
     ,kz_template:render(Template, TemplateModule, TemplateData)
     ,TemplateModule
