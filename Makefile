@@ -130,7 +130,7 @@ fixture_shell: ERL_CRASH_DUMP = "$(ROOT)/$(shell date +%s)_ecallmgr_erl_crash.du
 fixture_shell: ERL_LIBS = "$(ROOT)/deps:$(ROOT)/core:$(ROOT)/applications:$(shell echo $(ROOT)/deps/rabbitmq_erlang_client-*/deps)"
 fixture_shell:
 	@ERL_CRASH_DUMP="$(ERL_CRASH_DUMP)" ERL_LIBS="$(ERL_LIBS)" KAZOO_CONFIG=$(ROOT)/rel/config-test.ini \
-		erl -name fixturedb -s reloader -s kazoo_fixturedb_app "$$@"
+		erl -name fixturedb -s reloader "$$@"
 
 DIALYZER ?= dialyzer
 DIZLYZER += --statistics --no_native
