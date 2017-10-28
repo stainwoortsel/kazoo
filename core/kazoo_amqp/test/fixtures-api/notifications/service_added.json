@@ -28,7 +28,8 @@
         "pvt_type": "audit_log",
         "tree": [
             "account0000000000000000000000001",
-            "account0000000000000000000000002"
+            "account0000000000000000000000002",
+            "account0000000000000000000000003"
         ]
     },
     "Event-Category": "notification",

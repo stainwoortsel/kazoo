@@ -135,7 +135,6 @@ build_macro_data(DataJObj) ->
 maybe_add_macro_key(<<"user.", UserKey/binary>>, Acc, DataJObj) ->
     maybe_add_user_data(UserKey, Acc, DataJObj);
 maybe_add_macro_key(_Key, Acc, _DataJObj) ->
-    ?LOG_DEBUG("unprocessed macro key ~s: ~p", [_Key, _DataJObj]),
     Acc.
 
 -spec maybe_add_user_data(kz_json:path(), kz_proplist(), kz_json:object()) -> kz_proplist().
@@ -143,7 +142,6 @@ maybe_add_user_data(Key, Acc, DataJObj) ->
     User = get_user(DataJObj),
     case kz_json:get_value(Key, User) of
         'undefined' ->
-            ?LOG_DEBUG("unprocessed user macro key ~s: ~p", [Key, User]),
             Acc;
         V ->
             UserMacros = props:get_value(<<"user">>, Acc, []),
@@ -162,7 +160,7 @@ get_user(DataJObj) ->
     end.
 
 -ifdef(TEST).
-current_account_dollars(?AN_ACCOUNT_ID) -> {ok, 3.6592}.
+current_account_dollars(_) -> {ok, 3.6592}.
 -else.
 current_account_dollars(AccountId) ->
     wht_util:current_account_dollars(AccountId).

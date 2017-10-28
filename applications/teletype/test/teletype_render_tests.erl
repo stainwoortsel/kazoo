@@ -15,8 +15,8 @@
 -spec render_test_() -> any().
 render_test_() ->
     {setup
-    ,fun setup_test/0
-    ,fun teardown/1
+    ,fun setup/0
+    ,fun cleanup/1
     ,fun(_ReturnOfSetup) ->
              [?_assertEqual(34, length(?DEFAULT_MODULES))
              %% ,test_rendering(teletype_account_zone_change)
@@ -55,19 +55,15 @@ render_test_() ->
      end
     }.
 
-setup_test() ->
+setup() ->
     ?LOG_DEBUG(":: Setting up Kazoo FixtureDB"),
 
     {ok, _} = application:ensure_all_started(kazoo_config),
     {ok, LinkPid} = kazoo_data_link_sup:start_link(),
 
-    lager:set_loglevel(lager_console_backend, none),
-    lager:set_loglevel(lager_file_backend, none),
-    lager:set_loglevel(lager_syslog_backend, none),
-
     LinkPid.
 
-teardown(LinkPid) ->
+cleanup(LinkPid) ->
     _DataLink = erlang:exit(LinkPid, normal),
     Ref = monitor(process, LinkPid),
     receive
@@ -82,7 +78,7 @@ teardown(LinkPid) ->
 test_rendering(Module) ->
     TemplateId = Module:id(),
     TemplateIdStr = binary_to_list(TemplateId),
-    Fixture = "test/fixtures-api/notifications/" ++ TemplateIdStr ++ ".json",
+    Fixture = "fixtures-api/notifications/" ++ TemplateIdStr ++ ".json",
     {ok,FixtureJObj} = kz_json:fixture(kazoo_amqp, Fixture),
     DataJObj = kz_json:normalize(FixtureJObj),
     Macros = Module:macros(DataJObj),
@@ -106,20 +102,20 @@ render(TemplateId, CT, Macros) ->
 
 t0(TemplateId, CT) ->
     Ext = ct_to_ext(CT),
-    Path = filename:join([code:lib_dir(?APP), "test", <<TemplateId/binary,".",Ext/binary>>]),
-    ?LOG_DEBUG("reading t0 template ~s", [Path]),
+    Path = filename:join([code:lib_dir(?APP), "test/rendered-templates/", <<TemplateId/binary,".",Ext/binary>>]),
+    %% ?LOG_DEBUG("reading t0 template ~s", [Path]),
     {ok, Bin} = file:read_file(Path),
     lines(Bin).
 
 overwrite_t0(TemplateId, CT, Rendered) ->
     Ext = ct_to_ext(CT),
-    Path = filename:join([code:lib_dir(?APP), "test", <<TemplateId/binary,".",Ext/binary>>]),
+    Path = filename:join([code:lib_dir(?APP), "test/rendered-templates/", <<TemplateId/binary,".",Ext/binary>>]),
     ok = file:write_file(Path, Rendered).
 
 fetch_template(TemplateId, CT) ->
     Ext = ct_to_ext(CT),
     Path = filename:join([code:priv_dir(?APP), "templates", <<TemplateId/binary,".",Ext/binary>>]),
-    ?LOG_DEBUG("reading template ~s", [Path]),
+    %% ?LOG_DEBUG("reading template ~s", [Path]),
     file:read_file(Path).
 
 ct_to_ext(<<"text/plain">>) -> <<"text">>;
