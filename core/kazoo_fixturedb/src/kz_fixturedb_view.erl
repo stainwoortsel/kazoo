@@ -42,7 +42,7 @@ all_design_docs(Server, DbName, _Options) ->
 -spec get_results(server_map(), ne_binary(), ne_binary(), kz_data:options()) -> docs_resp().
 get_results(Server, DbName, Design, Options) ->
     Db = kz_fixturedb_server:get_db(Server, DbName),
-    props:get_first_defined(?DANGEROUS_VIEW_OPTS, Options) =:= undefined
+    props:get_first_defined(?DANGEROUS_VIEW_OPTS, Options) =/= undefined
         andalso ?LOG_DEBUG("you're testing too much, go home"),
     case kz_fixturedb_util:open_view(Db, kz_term:to_binary(Design), Options) of
         {ok, Result} -> {ok, prepare_view_result(Server, DbName, Result, Options)};
@@ -69,10 +69,11 @@ prepare_view_result(Server, DbName, Result, Options) ->
     case props:get_value(include_docs, Options, false) of
         false -> sort_and_limit(Result, Options);
         true ->
-            Opened = [kz_fixturedb_doc:open_doc(Server, DbName, kz_doc:id(D), Options)
-                      || D <- sort_and_limit(Result, Options)
-                     ],
-            lists:filtermap(fun({ok, J}) -> {true, J}; (_) -> false end, Opened)
+            [kz_json:set_value(<<"doc">>, Opened, V)
+             || V <- sort_and_limit(Result, Options),
+                {OkError, Opened} <- [kz_fixturedb_doc:open_doc(Server, DbName, kz_doc:id(V), Options)],
+                OkError =/= error
+            ]
     end.
 
 -spec sort_and_limit(kz_json:objects(), kz_data:options()) -> kz_json:objects().
