@@ -22,7 +22,7 @@
 
         ,encode_query_filename/2
 
-        %% utilities for calling from shell
+         %% utilities for calling from shell
         ,get_doc_path/2, get_view_path/3, get_att_path/3
         ,get_doc_path/3, get_view_path/4, get_att_path/4
 
