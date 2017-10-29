@@ -610,9 +610,6 @@ set_node(Category, Key, Value, Node) ->
                              'ok' |
                              {'ok', kz_json:object()} |
                              {'error', any()}.
--ifdef(TEST).
-update_category(_, _, _, _, _) -> 'ok'.
--else.
 update_category('undefined', _, _, _, _) -> 'ok';
 update_category(_, 'undefined', _, _, _) -> 'ok';
 update_category(_, _, 'undefined', _, _) -> 'ok';
@@ -722,7 +719,6 @@ update_pvt_fields(Category, JObj, 'undefined') ->
 update_pvt_fields(Category, JObj, PvtFields) ->
     Base = update_pvt_fields(Category, JObj, 'undefined'),
     kz_json:merge_jobjs(Base, PvtFields).
--endif.
 
 %%-----------------------------------------------------------------------------
 %% @public
@@ -810,19 +806,10 @@ flush(Category, Keys, Node) ->
 get_category(Category) ->
     get_category(Category, 'true').
 
--ifdef(TEST).
-get_category(?TEST_CAT, _) ->
-    kz_json:fixture(?APP, "fixture/test_cat_system.json");
-get_category(?TEST_CAT_EMPTY, _) ->
-    {'ok', kz_json:new()};
-get_category(_, _) ->
-    {'error', 'not_found'}.
--else.
 get_category(Category, 'true') ->
     kz_datamgr:open_cache_doc(?KZ_CONFIG_DB, Category, [{'cache_failures', ['not_found']}]);
 get_category(Category, 'false') ->
     kz_datamgr:open_doc(?KZ_CONFIG_DB, Category).
--endif.
 
 %%--------------------------------------------------------------------
 %% @public
@@ -832,7 +819,7 @@ get_category(Category, 'false') ->
 %%  exist and will move per-node settings if they exist.
 %%  In the event that both the source and destination exist but
 %%  have different values it will not make any change.  The parameter
-%%  is only removed from the source after a successsful save of the
+%%  is only removed from the source after a successful save of the
 %%  the destination.
 %% @end
 %%--------------------------------------------------------------------
