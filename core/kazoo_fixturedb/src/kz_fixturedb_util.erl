@@ -101,7 +101,7 @@ views_dir(#{server := #{url := Url}, name := DbName}) ->
 update_doc(JObj) ->
     Funs = [
             %% fun update_revision/1
-           ,fun(J) -> kz_doc:set_document_hash(J, kz_doc:calculate_document_hash(J)) end
+           fun(J) -> kz_doc:set_document_hash(J, kz_doc:calculate_document_hash(J)) end
            ],
     lists:foldl(fun(F, J) -> F(J) end, JObj, Funs).
 
