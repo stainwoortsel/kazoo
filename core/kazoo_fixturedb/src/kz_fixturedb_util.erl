@@ -18,7 +18,7 @@
 
         ,docs_dir/1, views_dir/1
 
-        ,update_doc/1
+        ,update_doc/1, update_revision/1
 
         ,encode_query_filename/2
 
@@ -51,7 +51,7 @@ format_error(Other) -> Other.
 
 -spec open_json(db_map(), ne_binary()) -> doc_resp().
 open_json(Db, DocId) ->
-    kz_json:fixture(doc_path(Db, DocId)).
+    read_json(doc_path(Db, DocId)).
 
 -spec open_attachment(db_map(), ne_binary(), ne_binary()) -> {ok, binary()} | {error, not_found}.
 open_attachment(Db, DocId, AName) ->
@@ -61,7 +61,7 @@ open_attachment(Db, DocId, AName) ->
 open_view(Db, Design, Options) ->
     %% ?LOG_DEBUG("~nDb ~p~n Design ~p~n Options ~p~n Path ~p~n"
     %%           ,[Db, Design, Options, view_path(Db, Design, Options)]),
-    kz_json:fixture(view_path(Db, Design, Options)).
+    read_json(view_path(Db, Design, Options)).
 
 -spec doc_path(db_map(), ne_binary()) -> file:filename_all().
 doc_path(#{server := #{url := Url}, name := DbName}, DocId) ->
@@ -99,7 +99,8 @@ views_dir(#{server := #{url := Url}, name := DbName}) ->
 
 -spec update_doc(kz_json:object()) -> kz_json:object().
 update_doc(JObj) ->
-    Funs = [fun update_revision/1
+    Funs = [
+            %% fun update_revision/1
            ,fun(J) -> kz_doc:set_document_hash(J, kz_doc:calculate_document_hash(J)) end
            ],
     lists:foldl(fun(F, J) -> F(J) end, JObj, Funs).
@@ -198,9 +199,9 @@ update_pvt_doc_hash() ->
     _ = [update_pvt_doc_hash(Path) || Path <- Paths],
     ok.
 
--spec update_pvt_doc_hash(text() | ne_binary()) -> ne_binary().
+-spec update_pvt_doc_hash(text() | ne_binary()) -> ok | {error, any()}.
 update_pvt_doc_hash(Path) ->
-    case kz_json:fixture(Path) of
+    case read_json(Path) of
         {ok, JObj} ->
             NewJObj = kz_doc:set_document_hash(JObj, kz_doc:calculate_document_hash(JObj)),
             file:write_file(Path, kz_json:encode(NewJObj, [pretty]));
@@ -210,6 +211,13 @@ update_pvt_doc_hash(Path) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+-spec read_json(file:filename_all()) -> {ok, kz_json:object()} | {error, not_found}.
+read_json(Path) ->
+    case read_file(Path) of
+        {ok, Bin} -> {ok, kz_json:decode(Bin)};
+        {error, _} -> {error, not_found}
+    end.
 
 -spec read_file(file:filename_all()) -> {ok, binary()} | {error, not_found}.
 read_file(Path) ->
