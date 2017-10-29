@@ -28,7 +28,7 @@
 
 -define(DANGEROUS_VIEW_OPTS, [startkey, endkey, key
                              ,keys, group, group_level
-                             ,reduce, list
+                             ,reduce, list, skip
                              ]).
 
 -define(KZ_FIXTUREDB_HRL, 'true').
