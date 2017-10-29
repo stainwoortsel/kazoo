@@ -717,11 +717,11 @@ log_function_clause(M, F, Length, [{M, F, _Args, _}|_]) ->
     ?LOG_INFO("unable to find function clause for ~s:~s/~b", [M, F, Length]);
 log_function_clause(M, F, Length, [{RealM, RealF, RealArgs, Where}|_ST]) ->
     ?LOG_ERROR("unable to find function clause for ~s:~s(~s) in ~s:~p"
-               ,[RealM, RealF
-                ,kz_binary:join([kz_term:to_binary(io_lib:format("~p",[A])) || A <- RealArgs], <<", ">>)
-                ,props:get_value('file', Where), props:get_value('line', Where)
-                ]
-               ),
+              ,[RealM, RealF
+               ,kz_binary:join([kz_term:to_binary(io_lib:format("~p",[A])) || A <- RealArgs], <<", ">>)
+               ,props:get_value('file', Where), props:get_value('line', Where)
+               ]
+              ),
     ?LOG_ERROR("as part of ~s:~s/~p", [M, F, Length]),
     _ = [?LOG_ERROR("st: ~p", [ST]) || ST <- _ST],
     'ok';

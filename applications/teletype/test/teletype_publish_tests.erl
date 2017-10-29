@@ -1,4 +1,4 @@
--module(teletype_publish).
+-module(teletype_publish_tests).
 
 -include_lib("eunit/include/eunit.hrl").
 -include("teletype.hrl").
