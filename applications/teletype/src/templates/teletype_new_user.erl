@@ -104,7 +104,7 @@ process_req(DataJObj) ->
 macros(DataJObj) ->
     macros(DataJObj, 'false').
 
--spec macros(kz_json:object(), 'true') -> {kz_json:object(), kz_proplist()} | kz_proplist().
+-spec macros(kz_json:object(), boolean()) -> {kz_json:object(), kz_proplist()} | kz_proplist().
 macros(DataJObj, 'true') ->
     ReqData = get_user_doc(DataJObj),
     {ReqData, create_macros(ReqData)};
