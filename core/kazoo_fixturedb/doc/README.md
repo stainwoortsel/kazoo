@@ -1,6 +1,53 @@
-# Kazoo FxitureDB
+# Kazoo FixtureDB
+
+What can you say about a data application? That it loves to be distributed and fault tolerance? That it listens to data streams and not understand a bit? yeah, that.
 
 ## Overview
+
+General speaking, FixtureDB removes dependency of Kazoo Data Manager for AMQP and Kazoo Cache and removes the burden of isolating source codes with `-ifdef(TEST)` when it comes to reading from database, which in parts result in a tiny little bit more coverage (if any).
+
+FixtureDB acts as central repository for all fixtures when we simply use during tests.
+
+When writing your EUnit test you can use [_fixture_ test representation](http://erlang.org/doc/apps/eunit/chapter.html#Fixtures) to setup a dummy connection to FixtureDB, and cleanup the connection later.
+
+Below is an example with `setup` and `cleanup` method, in `setup()` we're starting `kazoo_config` applications to read the default [`config-test.ini`](../../../rel/config-test.init and then starts the Kazoo Data connection manager. After these steps most of the calls to `kz_datamgr` functions will use FixtureDB (few operations, like view maintenance cleanup, are not implemented, also save document/put attachments simply return what you submitted without actually writing anything).
+
+* Sample test using setup/cleanup method
+
+```erlang
+-spec render_test_() -> any().
+render_test_() ->
+    {setup
+    ,fun setup/0
+    ,fun cleanup/1
+    ,fun(_ReturnOfSetup) ->
+             [{"you're awesome test"
+              ,?_assertEqual(good, evil)
+              }
+             ]
+     end
+    }.
+
+setup() ->
+    ?LOG_DEBUG(":: Setting up Kazoo FixtureDB"),
+
+    {ok, _} = application:ensure_all_started(kazoo_config),
+    {ok, LinkPid} = kazoo_data_link_sup:start_link(),
+
+    LinkPid.
+
+cleanup(LinkPid) ->
+    _DataLink = erlang:exit(LinkPid, normal),
+    Ref = monitor(process, LinkPid),
+    receive
+        {'DOWN', Ref, process, LinkPid, _Reason} ->
+            _KConfig = application:stop(kazoo_config),
+            ?LOG_DEBUG(":: Stopped Kazoo FixtureDB, data_link: ~p kazoo_config: ~p", [_DataLink, _KConfig])
+    after 1000 ->
+            _KConfig = application:stop(kazoo_config),
+            ?LOG_DEBUG(":: Stopped Kazoo FixtureDB, data_link: timeout kazoo_config: ~p", [_KConfig])
+    end.
+```
 
 ## Using FixtureDB
 
