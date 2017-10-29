@@ -421,7 +421,7 @@ pages:
     - 'core/kazoo_proper/doc/rates.md'
   - 'Kazoo Performance Testing':
       - 'core/kazoo_perf/doc/maintenance.md'
-  - 'Kazoo Test FixtureDB'
+  - 'Kazoo Test FixtureDB':
       - 'core/kazoo_fixturedb/doc/README.md'
 - 'Articles':
   - 'Introduction to Storage Plans - S3': 'doc/blog/storage.md'
