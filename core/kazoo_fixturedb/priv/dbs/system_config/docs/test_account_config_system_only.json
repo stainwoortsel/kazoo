@@ -2,7 +2,8 @@
     "_id": "test_account_config_system_only",
     "_rev": "1-2acb7ba4044ffb510cb85034455de2a4",
     "default": {
-    	"key": "system_only"
+        "empty": "",
+        "key": "system_only"
     },
     "pvt_account_db": "system_config",
     "pvt_account_id": "system_config",
