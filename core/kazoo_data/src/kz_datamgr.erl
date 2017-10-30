@@ -617,6 +617,20 @@ flush_cache_docs(DbName) ->
 %% open a document given a doc id returns an error tuple or the json
 %% @end
 %%--------------------------------------------------------------------
+
+-ifdef(TEST).
+%% -define(OPEN_DOC_LOG(DbName, DocId, Options),
+%%         begin
+%%             {_, ST} = erlang:process_info(self(), current_stacktrace),
+%%             kz_util:log_stacktrace(ST),
+%%             ?LOG_DEBUG("~s:open_doc(~p, ~p, ~p)", [?MODULE, DbName, DocId, Options])
+%%         end
+%%        ).
+-define(OPEN_DOC_LOG(DbName, DocId, Options), ok).
+-else.
+-define(OPEN_DOC_LOG(DbName, DocId, Options), ok).
+-endif.
+
 -spec open_doc(text(), docid()) ->
                       {'ok', kz_json:object()} |
                       data_error() |
@@ -634,6 +648,7 @@ open_doc(DbName, DocId) ->
 open_doc(DbName, {DocType, DocId}, Options) ->
     open_doc(DbName, DocId, maybe_add_doc_type(DocType, Options));
 open_doc(DbName, DocId, Options) when ?VALID_DBNAME(DbName) ->
+    ?OPEN_DOC_LOG(DbName, DocId, Options),
     kzs_doc:open_doc(kzs_plan:plan(DbName, Options), DbName, DocId, Options);
 open_doc(DbName, DocId, Options) ->
     case maybe_convert_dbname(DbName) of
@@ -1157,6 +1172,15 @@ add_required_option({Key, Fun}, {JObj, Options}=Acc) ->
 %%% View Functions
 %%%===================================================================
 
+-ifdef(TEST).
+%% -define(GET_RESULTS(DbName, DesignId, Options)
+%%        ,?LOG_DEBUG("~s:get_results(~p, ~p, ~p)", [?MODULE, DbName, DesignId, Options])
+%%        ).
+-define(GET_RESULTS(DbName, DesignId, Options), ok).
+-else.
+-define(GET_RESULTS(DbName, DesignId, Options), ok).
+-endif.
+
 %%--------------------------------------------------------------------
 %% @public
 %% @doc
@@ -1177,6 +1201,7 @@ get_results(DbName, DesignDoc) ->
     get_results(DbName, DesignDoc, []).
 
 get_results(DbName, DesignDoc, Options) when ?VALID_DBNAME(DbName) ->
+    ?GET_RESULTS(DbName, DesignDoc, Options),
     Opts = maybe_add_doc_type_from_view(DesignDoc, Options),
     Plan = kzs_plan:plan(DbName, Opts),
     case kzs_view:get_results(Plan, DbName, DesignDoc, Options) of
@@ -1191,6 +1216,7 @@ get_results(DbName, DesignDoc, Options) ->
     end.
 
 get_results_count(DbName, DesignDoc, Options) ->
+    ?GET_RESULTS(DbName, DesignDoc, Options),
     Opts = maybe_add_doc_type_from_view(DesignDoc, Options),
     kzs_view:get_results_count(kzs_plan:plan(DbName, Opts), DbName, DesignDoc, Options).
 
@@ -1210,6 +1236,7 @@ maybe_create_view(DbName, Plan, DesignDoc, Options) ->
 get_result_keys(DbName, DesignDoc) ->
     get_result_keys(DbName, DesignDoc, []).
 get_result_keys(DbName, DesignDoc, Options) ->
+    ?GET_RESULTS(DbName, DesignDoc, Options),
     Opts = maybe_add_doc_type_from_view(DesignDoc, Options),
     case kzs_view:get_results(kzs_plan:plan(DbName, Opts), DbName, DesignDoc, Options) of
         {'ok', JObjs} -> {'ok', get_result_keys(JObjs)};
@@ -1229,6 +1256,7 @@ get_result_keys(JObjs) ->
 get_result_ids(DbName, DesignDoc) ->
     get_result_ids(DbName, DesignDoc, []).
 get_result_ids(DbName, DesignDoc, Options) ->
+    ?GET_RESULTS(DbName, DesignDoc, Options),
     Opts = maybe_add_doc_type_from_view(DesignDoc, Options),
     case kzs_view:get_results(kzs_plan:plan(DbName, Opts), DbName, DesignDoc, Options) of
         {'ok', JObjs} -> {'ok', get_result_ids(JObjs)};

@@ -140,12 +140,26 @@ get_from_reseller(Account, Category, Key) ->
 
 -spec get_from_reseller(api_account(), ne_binary(), kz_json:path(), kz_json:api_json_term()) -> kz_json:api_json_term().
 get_from_reseller(Account, Category, Key, Default) ->
-    case load_config_from_reseller(Account, Category) of
+    case maybe_load_config_from_reseller(Account, Category) of
         {ok, JObj} ->
             get_global_from_doc(Category, Key, Default, JObj);
         {error, _} ->
             kapps_config:get(Category, Key, Default)
     end.
+
+-ifdef(TEST).
+%% for passing knm tests
+maybe_load_config_from_reseller(Account, _) when Account =:= <<"master_account_6992af0e9504d0b27">>;
+                                                 Account =:= <<"reseller_account_b113394f16cb76d">>;
+                                                 Account =:= <<"child_account_670a04df0014d0b27a">>;
+                                                 Account =:= <<"unrelated_account_b113394f16cb71">> ->
+    {error, not_found};
+maybe_load_config_from_reseller(Account, Category) ->
+    load_config_from_reseller(Account, Category).
+-else.
+maybe_load_config_from_reseller(Account, Category) ->
+    load_config_from_reseller(Account, Category).
+-endif.
 
 %%--------------------------------------------------------------------
 %% @public

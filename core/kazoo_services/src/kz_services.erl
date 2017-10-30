@@ -281,8 +281,8 @@ fetch_services_doc(?MATCH_ACCOUNT_RAW(AccountId), _NotFromCache) ->
             ?LOG_DEBUG("~n~n NO SERVICE DOC FOR AccountId: ~p~n~n", [AccountId]),
             kz_util:log_stacktrace(),
             {error, wrong}
-        %% Not throwing since this is needed for one of the kapps_account_config test
-        %% {error, _}=Error ->
+            %% Not throwing since this is needed for one of the kapps_account_config test
+            %% {error, _}=Error ->
             %% throw(Error)
     catch %% for tests that did not start kazoo_fixturedb
         error:badarg ->
