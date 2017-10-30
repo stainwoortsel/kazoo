@@ -42,8 +42,8 @@ all_design_docs(Server, DbName, _Options) ->
 -spec get_results(server_map(), ne_binary(), ne_binary(), kz_data:options()) -> docs_resp().
 get_results(Server, DbName, Design, Options) ->
     Db = kz_fixturedb_server:get_db(Server, DbName),
-    props:get_first_defined(?DANGEROUS_VIEW_OPTS, Options) =/= undefined
-        andalso ?LOG_DEBUG("you're testing too much, go home"),
+    %%props:get_first_defined(?DANGEROUS_VIEW_OPTS, Options) =/= undefined
+    %%    andalso io:format(user, "~n~s:~b ~s you're testing too much, go home~n", [?MODULE, ?LINE, Design]),
     case kz_fixturedb_util:open_view(Db, kz_term:to_binary(Design), Options) of
         {ok, Result} -> {ok, prepare_view_result(Server, DbName, Result, Options)};
         {error, _} -> {error, invalid_view_name}

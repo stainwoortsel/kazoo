@@ -277,7 +277,12 @@ fetch_services_doc(?WRONG_ACCOUNT_ID, _NotFromCache)
 fetch_services_doc(?MATCH_ACCOUNT_RAW(AccountId), _NotFromCache) ->
     case kz_datamgr:open_doc(?KZ_SERVICES_DB, AccountId) of
         {ok, _}=OK -> OK;
-        {error, _}=E -> throw(E)
+        {error, _}=Error ->
+            ?LOG_DEBUG("~n~n NO SERVICE DOC FOR AccountId: ~p~n~n", [AccountId]),
+            kz_util:log_stacktrace(),
+            Error
+            %% Not throwing since this is needed for one of the kapps_account_config test
+            %% throw(Error)
     end.
 -else.
 fetch_services_doc(?MATCH_ACCOUNT_RAW(AccountId), cache_failures=Option) ->
@@ -1397,7 +1402,12 @@ cascade_results(View, AccountId) ->
                   ],
     case kz_datamgr:get_results(?KZ_SERVICES_DB, View, ViewOptions) of
         {ok, _}=OK -> OK;
-        {error, _}=E -> throw(E)
+        {error, _}=Error ->
+            ?LOG_DEBUG("~n~n NO VIEW FOR AccountId: ~p View: ~p~n~n", [AccountId, View]),
+            kz_util:log_stacktrace(),
+            Error
+            %% Not throwing since this is needed for one of the kapps_account_config test
+            %% throw(Error)
     end.
 -else.
 cascade_results(View, AccountId) ->
@@ -1551,7 +1561,9 @@ fetch_account(?A_MASTER_ACCOUNT_ID) -> kz_json:fixture(?APP, "a_master_account.j
 fetch_account(?A_RESELLER_ACCOUNT_ID) -> kz_json:fixture(?APP, "a_reseller_account.json");
 fetch_account(?A_SUB_ACCOUNT_ID) -> kz_json:fixture(?APP, "a_sub_account.json");
 fetch_account(?B_SUB_ACCOUNT_ID) -> kz_json:fixture(?APP, "a_sub_account.json");
-fetch_account(?UNRELATED_ACCOUNT_ID) -> kz_json:fixture(?APP, "unrelated_account.json").
+%% Line below is needed for one of the kapps_account_config test
+fetch_account(?UNRELATED_ACCOUNT_ID) -> kz_json:fixture(?APP, "unrelated_account.json");
+fetch_account(Account) -> kz_account:fetch(Account).
 -else.
 fetch_account(Account) -> kz_account:fetch(Account).
 -endif.

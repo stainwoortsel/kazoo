@@ -19,12 +19,37 @@
         "bol_key": false,
         "f_key": 1.5,
         "i_key": 3456,
+        "list_of_json": [
+            {
+                "name": "sub_account"
+            }
+        ],
         "obj_empty_test": {
             "obj_empty_sometimes": {},
             "wand": "dnaw"
         },
         "obj_key": {
             "from": "sub_account"
+        },
+        "sub+parent+empty_reseller+system": {
+            "from": "sub_account",
+            "obj_empty_sometimes": {},
+            "sub_account": true
+        },
+        "sub+parent+system": {
+            "from": "sub_account",
+            "obj_empty_sometimes": {},
+            "sub_account": true
+        },
+        "sub+reseller+system": {
+            "from": "sub_account",
+            "obj_empty_sometimes": {},
+            "sub_account": true
+        },
+        "sub_account+system": {
+            "from": "sub_account",
+            "obj_empty_sometimes": {},
+            "sub_account": true
         }
     }
 }
