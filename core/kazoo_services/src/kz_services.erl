@@ -275,14 +275,18 @@ fetch_services_doc(?WRONG_ACCOUNT_ID, _NotFromCache)
   when is_boolean(_NotFromCache); _NotFromCache =:= cache_failures ->
     {error, wrong};
 fetch_services_doc(?MATCH_ACCOUNT_RAW(AccountId), _NotFromCache) ->
-    case kz_datamgr:open_doc(?KZ_SERVICES_DB, AccountId) of
+    try kz_datamgr:open_doc(?KZ_SERVICES_DB, AccountId) of
         {ok, _}=OK -> OK;
-        {error, _}=Error ->
+        {error, _} ->
             ?LOG_DEBUG("~n~n NO SERVICE DOC FOR AccountId: ~p~n~n", [AccountId]),
             kz_util:log_stacktrace(),
-            Error
-            %% Not throwing since this is needed for one of the kapps_account_config test
+            {error, wrong}
+        %% Not throwing since this is needed for one of the kapps_account_config test
+        %% {error, _}=Error ->
             %% throw(Error)
+    catch %% for tests that did not start kazoo_fixturedb
+        error:badarg ->
+            {error, wrong}
     end.
 -else.
 fetch_services_doc(?MATCH_ACCOUNT_RAW(AccountId), cache_failures=Option) ->
@@ -1561,8 +1565,8 @@ fetch_account(?A_MASTER_ACCOUNT_ID) -> kz_json:fixture(?APP, "a_master_account.j
 fetch_account(?A_RESELLER_ACCOUNT_ID) -> kz_json:fixture(?APP, "a_reseller_account.json");
 fetch_account(?A_SUB_ACCOUNT_ID) -> kz_json:fixture(?APP, "a_sub_account.json");
 fetch_account(?B_SUB_ACCOUNT_ID) -> kz_json:fixture(?APP, "a_sub_account.json");
-%% Line below is needed for one of the kapps_account_config test
 fetch_account(?UNRELATED_ACCOUNT_ID) -> kz_json:fixture(?APP, "unrelated_account.json");
+%% Line below is needed for one of the kapps_account_config test
 fetch_account(Account) -> kz_account:fetch(Account).
 -else.
 fetch_account(Account) -> kz_account:fetch(Account).
