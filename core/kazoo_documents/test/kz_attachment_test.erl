@@ -15,8 +15,9 @@ decode_plain_text_test_() ->
     Base64Data = base64:encode(Data),
     InlineData = <<"data:text/plain;base64,", Base64Data/binary>>,
 
-    ?assertEqual({'undefined', Data}, kz_attachment:decode_base64(Base64Data)),
-    ?assertEqual({<<"text/plain">>, Data}, kz_attachment:decode_base64(InlineData)).
+    [?_assertEqual({'undefined', Data}, kz_attachment:decode_base64(Base64Data))
+    ,?_assertEqual({<<"text/plain">>, Data}, kz_attachment:decode_base64(InlineData))
+    ].
 
 decode_image_png_test_() ->
     Path = filename:join(code:priv_dir('kazoo_fixturedb'), "media_files/tiny-red-dot.png"),
