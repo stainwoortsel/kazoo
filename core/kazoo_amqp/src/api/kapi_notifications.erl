@@ -12,16 +12,17 @@
 -export([bind_q/2, unbind_q/2]).
 -export([declare_exchanges/0]).
 
--export([definitions/0]).
--export([special_notifications/0]).
--export([definition_type/1
-        ,definition_friendly_name/1
-        ,definition_build_function/1
-        ,definition_validate_function/1
-        ,definition_publish_function/1
-        ,definition_binding/1
-        ,definition_restrict_to/1
-        ,definition_headers/1
+-export([metadata/0]).
+-export([metadata_type/1
+        ,metadata_friendly_name/1
+        ,metadata_description/1
+        ,metadata_category/1
+        ,metadata_build_function/1
+        ,metadata_validate_function/1
+        ,metadata_publish_function/1
+        ,metadata_binding/1
+        ,metadata_restrict_to/1
+        ,metadata_headers/1
         ]).
 
 -export([voicemail_new/1, voicemail_new_v/1
@@ -596,362 +597,436 @@
                      ]).
 -define(SKEL_TYPES, []).
 
--type definition() :: {ne_binary()
-                      ,ne_binary()
-                      ,fun((api_terms()) -> api_formatter_return())
-                      ,fun((api_terms()) -> boolean())
-                      ,fun((api_terms()) -> 'ok')
-                      ,atom()
-                      ,kz_proplist()
-                      }.
--type definitions() :: [definition()].
+-type metadata_element() :: {ne_binary()
+                            ,ne_binary()
+                            ,ne_binary()
+                            ,ne_binary()
+                            ,fun((api_terms()) -> api_formatter_return())
+                            ,fun((api_terms()) -> boolean())
+                            ,fun((api_terms()) -> 'ok')
+                            ,atom()
+                            ,kz_proplist()
+                            }.
+-type metadata() :: [metadata_element()].
 
--define(SPECIAL_NOTIFICATIONS, [<<"system_alert">>, <<"webhook">>, <<"voicemail_saved">>]).
--define(NOTIFICATIONS, [{<<"voicemail_new">>
-                        ,<<"New Voicemail Message">>
-                        ,fun kapi_notifications:voicemail_new/1
-                        ,fun kapi_notifications:voicemail_new_v/1
-                        ,fun kapi_notifications:publish_voicemail_new/1
-                        ,?NOTIFY_VOICEMAIL_SAVED
-                        ,'new_voicemail'
-                        ,?VOICEMAIL_NEW_HEADERS ++ ?OPTIONAL_VOICEMAIL_NEW_HEADERS
-                       }
-                       ,{<<"voicemail_saved">>
-                        ,<<"Voicemail Message Saved">>
-                        ,fun kapi_notifications:voicemail_saved/1
-                        ,fun kapi_notifications:voicemail_saved_v/1
-                        ,fun kapi_notifications:publish_voicemail_saved/1
-                        ,?NOTIFY_VOICEMAIL_SAVED
-                        ,'voicemail_saved'
-                        ,?VOICEMAIL_SAVED_HEADERS ++ ?OPTIONAL_VOICEMAIL_SAVED_HEADERS
-                       }
-                       ,{<<"voicemail_full">>
-                        ,<<"Voicemail Box Full">>
-                        ,fun kapi_notifications:voicemail_full/1
-                        ,fun kapi_notifications:voicemail_full_v/1
-                        ,fun kapi_notifications:publish_voicemail_full/1
-                        ,?NOTIFY_VOICEMAIL_FULL
-                        ,'voicemail_full'
-                        ,?VOICEMAIL_FULL_HEADERS ++ ?OPTIONAL_VOICEMAIL_FULL_HEADERS
-                       }
-                       ,{<<"inbound_fax">>
-                        ,<<"New Inbound Fax">>
-                        ,fun kapi_notifications:fax_inbound/1
-                        ,fun kapi_notifications:fax_inbound_v/1
-                        ,fun kapi_notifications:publish_fax_inbound/1
-                        ,?NOTIFY_FAX_INBOUND
-                        ,'inbound_fax'
-                        ,?FAX_INBOUND_HEADERS ++ ?OPTIONAL_FAX_INBOUND_HEADERS
-                       }
-                       ,{<<"outbound_fax">>
-                        ,<<"New Outbound Fax">>
-                        ,fun kapi_notifications:fax_outbound/1
-                        ,fun kapi_notifications:fax_outbound_v/1
-                        ,fun kapi_notifications:publish_fax_outbound/1
-                        ,?NOTIFY_FAX_OUTBOUND
-                        ,'outbound_fax'
-                        ,?FAX_OUTBOUND_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_HEADERS
-                       }
-                       ,{<<"inbound_fax_error">>
-                        ,<<"Inbound Fax Error">>
-                        ,fun kapi_notifications:fax_inbound_error/1
-                        ,fun kapi_notifications:fax_inbound_error_v/1
-                        ,fun kapi_notifications:publish_fax_inbound_error/1
-                        ,?NOTIFY_FAX_INBOUND_ERROR
-                        ,'inbound_fax_error'
-                        ,?FAX_INBOUND_ERROR_HEADERS ++ ?OPTIONAL_FAX_INBOUND_ERROR_HEADERS
-                       }
-                       ,{<<"outbound_fax_error">>
-                        ,<<"Outbound Fax Error">>
-                        ,fun kapi_notifications:fax_outbound_error/1
-                        ,fun kapi_notifications:fax_outbound_error_v/1
-                        ,fun kapi_notifications:publish_fax_outbound_error/1
-                        ,?NOTIFY_FAX_OUTBOUND_ERROR
-                        ,'outbound_fax_error'
-                        ,?FAX_OUTBOUND_ERROR_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_ERROR_HEADERS
-                       }
-                       ,{<<"outbound_smtp_fax_error">>
-                        ,<<"Outbound Fax Email Error">>
-                        ,fun kapi_notifications:fax_outbound_smtp_error/1
-                        ,fun kapi_notifications:fax_outbound_smtp_error_v/1
-                        ,fun kapi_notifications:publish_fax_outbound_smtp_error/1
-                        ,?NOTIFY_FAX_OUTBOUND_SMTP_ERROR
-                        ,'outbound_smtp_fax_error'
-                        ,?FAX_OUTBOUND_SMTP_ERROR_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_SMTP_ERROR_HEADERS
-                       }
-                       ,{<<"register">>
-                        ,<<"Registration">>
-                        ,fun kapi_notifications:register/1
-                        ,fun kapi_notifications:register_v/1
-                        ,fun kapi_notifications:publish_register/1
-                        ,?NOTIFY_REGISTER
-                        ,'register'
-                        ,?REGISTER_HEADERS ++ ?OPTIONAL_REGISTER_HEADERS
-                       }
-                       ,{<<"deregister">>
-                        ,<<"De-Registration">>
-                        ,fun kapi_notifications:deregister/1
-                        ,fun kapi_notifications:deregister_v/1
-                        ,fun kapi_notifications:publish_deregister/1
-                        ,?NOTIFY_DEREGISTER
-                        ,'deregister'
-                        ,?DEREGISTER_HEADERS ++ ?OPTIONAL_DEREGISTER_HEADERS
-                       }
-                       ,{<<"password_recovery">>
-                        ,<<"Password Recovery">>
-                        ,fun kapi_notifications:password_recovery/1
-                        ,fun kapi_notifications:password_recovery_v/1
-                        ,fun kapi_notifications:publish_password_recovery/1
-                        ,?NOTIFY_PASSWORD_RECOVERY
-                        ,'password_recovery'
-                        ,?PASSWORD_RECOVERY_HEADERS ++ ?OPTIONAL_PASSWORD_RECOVERY_HEADERS
-                       }
-                       ,{<<"first_occurrence">>
-                        ,<<"Account First Occurrance">>
-                        ,fun kapi_notifications:first_occurrence/1
-                        ,fun kapi_notifications:first_occurrence_v/1
-                        ,fun kapi_notifications:publish_first_occurrence/1
-                        ,?NOTIFY_FIRST_OCCURRENCE
-                        ,'first_occurrence'
-                        ,?FIRST_OCCURRENCE_HEADERS ++ ?OPTIONAL_FIRST_OCCURRENCE_HEADERS
-                       }
-                       ,{<<"new_account">>
-                        ,<<"New account">>
-                        ,fun kapi_notifications:new_account/1
-                        ,fun kapi_notifications:new_account_v/1
-                        ,fun kapi_notifications:publish_new_account/1
-                        ,?NOTIFY_NEW_ACCOUNT
-                        ,'new_account'
-                        ,?NEW_ACCOUNT_HEADERS ++ ?OPTIONAL_NEW_ACCOUNT_HEADERS
-                       }
-                       ,{<<"new_user">>
-                        ,<<"New User">>
-                        ,fun kapi_notifications:new_user/1
-                        ,fun kapi_notifications:new_user_v/1
-                        ,fun kapi_notifications:publish_new_user/1
-                        ,?NOTIFY_NEW_USER
-                        ,'new_user'
-                        ,?NEW_USER_HEADERS ++ ?OPTIONAL_NEW_USER_HEADERS
-                       }
-                       ,{<<"account_zone_change">>
-                        ,<<"Account Zone Change">>
-                        ,fun kapi_notifications:account_zone_change/1
-                        ,fun kapi_notifications:account_zone_change_v/1
-                        ,fun kapi_notifications:publish_account_zone_change/1
-                        ,?NOTIFY_ACCOUNT_ZONE_CHANGE
-                        ,'account_zone_change'
-                        ,?ACCOUNT_ZONE_CHANGE_HEADERS ++ ?OPTIONAL_ACCOUNT_ZONE_CHANGE_HEADERS
-                       }
-                       ,{<<"port_unconfirmed">>
-                        ,<<"Port Unconfirmed">>
-                        ,fun kapi_notifications:port_unconfirmed/1
-                        ,fun kapi_notifications:port_unconfirmed_v/1
-                        ,fun kapi_notifications:publish_port_unconfirmed/1
-                        ,?NOTIFY_PORT_UNCONFIRMED
-                        ,'port_unconfirmed'
-                        ,?PORT_UNCONFIRMED_HEADERS ++ ?OPTIONAL_PORT_UNCONFIRMED_HEADERS
-                       }
-                       ,{<<"port_request">>
-                        ,<<"Port Request">>
-                        ,fun kapi_notifications:port_request/1
-                        ,fun kapi_notifications:port_request_v/1
-                        ,fun kapi_notifications:publish_port_request/1
-                        ,?NOTIFY_PORT_REQUEST
-                        ,'port_request'
-                        ,?PORT_REQUEST_HEADERS ++ ?OPTIONAL_PORT_REQUEST_HEADERS
-                       }
-                       ,{<<"port_pending">>
-                        ,<<"Port Pending">>
-                        ,fun kapi_notifications:port_pending/1
-                        ,fun kapi_notifications:port_pending_v/1
-                        ,fun kapi_notifications:publish_port_pending/1
-                        ,?NOTIFY_PORT_PENDING
-                        ,'port_pending'
-                        ,?PORT_PENDING_HEADERS ++ ?OPTIONAL_PORT_PENDING_HEADERS
-                       }
-                       ,{<<"port_scheduled">>
-                        ,<<"Port Scheduled">>
-                        ,fun kapi_notifications:port_scheduled/1
-                        ,fun kapi_notifications:port_scheduled_v/1
-                        ,fun kapi_notifications:publish_port_scheduled/1
-                        ,?NOTIFY_PORT_SCHEDULED
-                        ,'port_scheduled'
-                        ,?PORT_SCHEDULED_HEADERS ++ ?OPTIONAL_PORT_SCHEDULED_HEADERS
-                       }
-                       ,{<<"port_cancel">>
-                        ,<<"Port Cancel">>
-                        ,fun kapi_notifications:port_cancel/1
-                        ,fun kapi_notifications:port_cancel_v/1
-                        ,fun kapi_notifications:publish_port_cancel/1
-                        ,?NOTIFY_PORT_CANCEL
-                        ,'port_cancel'
-                        ,?PORT_CANCEL_HEADERS ++ ?OPTIONAL_PORT_CANCEL_HEADERS
-                       }
-                       ,{<<"port_rejected">>
-                        ,<<"Port Rejected">>
-                        ,fun kapi_notifications:port_rejected/1
-                        ,fun kapi_notifications:port_rejected_v/1
-                        ,fun kapi_notifications:publish_port_rejected/1
-                        ,?NOTIFY_PORT_REJECTED
-                        ,'port_rejected'
-                        ,?PORT_REJECTED_HEADERS ++ ?OPTIONAL_PORT_REJECTED_HEADERS
-                       }
-                       ,{<<"ported">>
-                        ,<<"Ported">>
-                        ,fun kapi_notifications:ported/1
-                        ,fun kapi_notifications:ported_v/1
-                        ,fun kapi_notifications:publish_ported/1
-                        ,?NOTIFY_PORTED
-                        ,'ported'
-                        ,?PORTED_HEADERS ++ ?OPTIONAL_PORTED_HEADERS
-                       }
-                       ,{<<"port_comment">>
-                        ,<<"Port Comment">>
-                        ,fun kapi_notifications:port_comment/1
-                        ,fun kapi_notifications:port_comment_v/1
-                        ,fun kapi_notifications:publish_port_comment/1
-                        ,?NOTIFY_PORT_COMMENT
-                        ,'port_comment'
-                        ,?PORT_COMMENT_HEADERS ++ ?OPTIONAL_PORT_COMMENT_HEADERS
-                       }
-                       ,{<<"cnam_request">>
-                        ,<<"CNAM Update">>
-                        ,fun kapi_notifications:cnam_request/1
-                        ,fun kapi_notifications:cnam_request_v/1
-                        ,fun kapi_notifications:publish_cnam_request/1
-                        ,?NOTIFY_CNAM_REQUEST
-                        ,'cnam_requests'
-                        ,?CNAM_REQUEST_HEADERS ++ ?OPTIONAL_CNAM_REQUEST_HEADERS
-                       }
-                       ,{<<"low_balance">>
-                        ,<<"Account Low Balance">>
-                        ,fun kapi_notifications:low_balance/1
-                        ,fun kapi_notifications:low_balance_v/1
-                        ,fun kapi_notifications:publish_low_balance/1
-                        ,?NOTIFY_LOW_BALANCE
-                        ,'low_balance'
-                        ,?LOW_BALANCE_HEADERS ++ ?OPTIONAL_LOW_BALANCE_HEADERS
-                       }
-                       ,{<<"topup">>
-                        ,<<"Account Topup">>
-                        ,fun kapi_notifications:topup/1
-                        ,fun kapi_notifications:topup_v/1
-                        ,fun kapi_notifications:publish_topup/1
-                        ,?NOTIFY_TOPUP
-                        ,'topup'
-                        ,?TOPUP_HEADERS ++ ?OPTIONAL_TOPUP_HEADERS
-                       }
-                       ,{<<"transaction">>
-                        ,<<"Transaction Completed">>
-                        ,fun kapi_notifications:transaction/1
-                        ,fun kapi_notifications:transaction_v/1
-                        ,fun kapi_notifications:publish_transaction/1
-                        ,?NOTIFY_TRANSACTION
-                        ,'transaction'
-                        ,?TRANSACTION_HEADERS ++ ?OPTIONAL_TRANSACTION_HEADERS
-                       }
-                       ,{<<"webhook">>
-                        ,<<"Callflow Webhook Triggered">>
-                        ,fun kapi_notifications:webhook/1
-                        ,fun kapi_notifications:webhook_v/1
-                        ,fun kapi_notifications:publish_webhook/1
-                        ,?NOTIFY_WEBHOOK_CALLFLOW
-                        ,'webhook'
-                        ,?WEBHOOK_HEADERS ++ ?OPTIONAL_WEBHOOK_HEADERS
-                       }
-                       ,{<<"webhook_disabled">>
-                        ,<<"Webhook Disabled">>
-                        ,fun kapi_notifications:webhook_disabled/1
-                        ,fun kapi_notifications:webhook_disabled_v/1
-                        ,fun kapi_notifications:publish_webhook_disabled/1
-                        ,?NOTIFY_WEBHOOK_DISABLED
-                        ,'webhook_disabled'
-                        ,?WEBHOOK_DISABLED_HEADERS ++ ?OPTIONAL_WEBHOOK_DISABLED_HEADERS
-                       }
-                       ,{<<"denied_emergency_bridge">>
-                        ,<<"Emergency Call Failed">>
-                        ,fun kapi_notifications:denied_emergency_bridge/1
-                        ,fun kapi_notifications:denied_emergency_bridge_v/1
-                        ,fun kapi_notifications:publish_denied_emergency_bridge/1
-                        ,?NOTIFY_DENIED_EMERGENCY_BRIDGE
-                        ,'denied_emergency_bridge'
-                        ,?DENIED_EMERGENCY_BRIDGE_HEADERS ++ ?OPTIONAL_DENIED_EMERGENCY_BRIDGE_HEADERS
-                       }
-                       ,{<<"customer_update">>
-                        ,<<"Customer Update">>
-                        ,fun kapi_notifications:customer_update/1
-                        ,fun kapi_notifications:customer_update_v/1
-                        ,fun kapi_notifications:publish_customer_update/1
-                        ,?NOTIFY_CUSTOMER_UPDATE
-                        ,'customer_update'
-                        ,?CUSTOMER_UPDATE_HEADERS ++ ?OPTIONAL_CUSTOMER_UPDATE_HEADERS
-                       }
-                       ,{<<"service_added">>
-                        ,<<"Service Added">>
-                        ,fun kapi_notifications:service_added/1
-                        ,fun kapi_notifications:service_added_v/1
-                        ,fun kapi_notifications:publish_service_added/1
-                        ,?NOTIFY_SERVICE_ADDED
-                        ,'service_added'
-                        ,?SERVICE_ADDED_HEADERS ++ ?OPTIONAL_SERVICE_ADDED_HEADERS
-                       }
-                       ,{<<"missed_call">>
-                        ,<<"Missed Call Triggered">>
-                        ,fun kapi_notifications:missed_call/1
-                        ,fun kapi_notifications:missed_call_v/1
-                        ,fun kapi_notifications:publish_missed_call/1
-                        ,?NOTIFY_MISSED_CALL
-                        ,'missed_call'
-                        ,?MISSED_CALL_HEADERS ++ ?OPTIONAL_MISSED_CALL_HEADERS
-                       }
-                       ,{<<"system_alert">>
-                        ,<<"System Alert">>
-                        ,fun kapi_notifications:system_alert/1
-                        ,fun kapi_notifications:system_alert_v/1
-                        ,fun kapi_notifications:publish_system_alert/1
-                        ,?NOTIFY_SYSTEM_ALERT
-                        ,'system_alerts'
-                        ,?SYSTEM_ALERT_HEADERS ++ ?OPTIONAL_SYSTEM_ALERT_HEADERS
-                       }
-                       ,{<<"skel">>
-                        ,<<"Example Notificaiton">>
-                        ,fun kapi_notifications:skel/1
-                        ,fun kapi_notifications:skel_v/1
-                        ,fun kapi_notifications:publish_skel/1
-                        ,?NOTIFY_SKEL
-                        ,'skel'
-                        ,?SKEL_HEADERS ++ ?OPTIONAL_SKEL_HEADERS
-                       }]).
+-define(METADATA, [{<<"voicemail_new">>
+                   ,<<"New Voicemail Message">>
+                   ,<<"This event is triggered any time a voicemail message is left">>
+                   ,<<"voicemail">>
+                   ,fun kapi_notifications:voicemail_new/1
+                   ,fun kapi_notifications:voicemail_new_v/1
+                   ,fun kapi_notifications:publish_voicemail_new/1
+                   ,?NOTIFY_VOICEMAIL_SAVED
+                   ,'new_voicemail'
+                   ,?VOICEMAIL_NEW_HEADERS ++ ?OPTIONAL_VOICEMAIL_NEW_HEADERS
+                  }
+                  ,{<<"voicemail_saved">>
+                   ,<<"Voicemail Message Saved">>
+                   ,<<"This event is triggered any time a voicemail message is saved in the voicemail box 'new' folder">>
+                   ,<<"internal">>
+                   ,fun kapi_notifications:voicemail_saved/1
+                   ,fun kapi_notifications:voicemail_saved_v/1
+                   ,fun kapi_notifications:publish_voicemail_saved/1
+                   ,?NOTIFY_VOICEMAIL_SAVED
+                   ,'voicemail_saved'
+                   ,?VOICEMAIL_SAVED_HEADERS ++ ?OPTIONAL_VOICEMAIL_SAVED_HEADERS
+                  }
+                  ,{<<"voicemail_full">>
+                   ,<<"Voicemail Box Full">>
+                   ,<<"This event is triggered any time an attempt to leave a voicemail message is blocked because the voicemail box is full">>
+                   ,<<"voicemail">>
+                   ,fun kapi_notifications:voicemail_full/1
+                   ,fun kapi_notifications:voicemail_full_v/1
+                   ,fun kapi_notifications:publish_voicemail_full/1
+                   ,?NOTIFY_VOICEMAIL_FULL
+                   ,'voicemail_full'
+                   ,?VOICEMAIL_FULL_HEADERS ++ ?OPTIONAL_VOICEMAIL_FULL_HEADERS
+                  }
+                  ,{<<"inbound_fax">>
+                   ,<<"Successful Fax Reception">>
+                   ,<<"This event is triggered when a fax is successfully received">>
+                   ,<<"fax">>
+                   ,fun kapi_notifications:fax_inbound/1
+                   ,fun kapi_notifications:fax_inbound_v/1
+                   ,fun kapi_notifications:publish_fax_inbound/1
+                   ,?NOTIFY_FAX_INBOUND
+                   ,'inbound_fax'
+                   ,?FAX_INBOUND_HEADERS ++ ?OPTIONAL_FAX_INBOUND_HEADERS
+                  }
+                  ,{<<"outbound_fax">>
+                   ,<<"Successful Fax Transmission">>
+                   ,<<"This event is triggered when a fax is successfully transmitted">>
+                   ,<<"fax">>
+                   ,fun kapi_notifications:fax_outbound/1
+                   ,fun kapi_notifications:fax_outbound_v/1
+                   ,fun kapi_notifications:publish_fax_outbound/1
+                   ,?NOTIFY_FAX_OUTBOUND
+                   ,'outbound_fax'
+                   ,?FAX_OUTBOUND_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_HEADERS
+                  }
+                  ,{<<"inbound_fax_error">>
+                   ,<<"Fax Reception Error">>
+                   ,<<"This event is triggered when receiving a fax fails">>
+                   ,<<"fax">>
+                   ,fun kapi_notifications:fax_inbound_error/1
+                   ,fun kapi_notifications:fax_inbound_error_v/1
+                   ,fun kapi_notifications:publish_fax_inbound_error/1
+                   ,?NOTIFY_FAX_INBOUND_ERROR
+                   ,'inbound_fax_error'
+                   ,?FAX_INBOUND_ERROR_HEADERS ++ ?OPTIONAL_FAX_INBOUND_ERROR_HEADERS
+                  }
+                  ,{<<"outbound_fax_error">>
+                   ,<<"Fax Transmission Error">>
+                   ,<<"This event is triggered when transmitting a fax fails">>
+                   ,<<"fax">>
+                   ,fun kapi_notifications:fax_outbound_error/1
+                   ,fun kapi_notifications:fax_outbound_error_v/1
+                   ,fun kapi_notifications:publish_fax_outbound_error/1
+                   ,?NOTIFY_FAX_OUTBOUND_ERROR
+                   ,'outbound_fax_error'
+                   ,?FAX_OUTBOUND_ERROR_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_ERROR_HEADERS
+                  }
+                  ,{<<"outbound_smtp_fax_error">>
+                   ,<<"Invalid Email-to-Fax Email">>
+                   ,<<"This event is triggered when the received email-to-fax email is invalid">>
+                   ,<<"fax">>
+                   ,fun kapi_notifications:fax_outbound_smtp_error/1
+                   ,fun kapi_notifications:fax_outbound_smtp_error_v/1
+                   ,fun kapi_notifications:publish_fax_outbound_smtp_error/1
+                   ,?NOTIFY_FAX_OUTBOUND_SMTP_ERROR
+                   ,'outbound_smtp_fax_error'
+                   ,?FAX_OUTBOUND_SMTP_ERROR_HEADERS ++ ?OPTIONAL_FAX_OUTBOUND_SMTP_ERROR_HEADERS
+                  }
+                  ,{<<"register">>
+                   ,<<"Registration">>
+                   ,<<"This event is triggered when a device registers but is not currently registered">>
+                   ,<<"sip">>
+                   ,fun kapi_notifications:register/1
+                   ,fun kapi_notifications:register_v/1
+                   ,fun kapi_notifications:publish_register/1
+                   ,?NOTIFY_REGISTER
+                   ,'register'
+                   ,?REGISTER_HEADERS ++ ?OPTIONAL_REGISTER_HEADERS
+                  }
+                  ,{<<"deregister">>
+                   ,<<"De-Registration">>
+                   ,<<"This event is triggered when a device fails to re-register and the contact expires">>
+                   ,<<"sip">>
+                   ,fun kapi_notifications:deregister/1
+                   ,fun kapi_notifications:deregister_v/1
+                   ,fun kapi_notifications:publish_deregister/1
+                   ,?NOTIFY_DEREGISTER
+                   ,'deregister'
+                   ,?DEREGISTER_HEADERS ++ ?OPTIONAL_DEREGISTER_HEADERS
+                  }
+                  ,{<<"password_recovery">>
+                   ,<<"Password Recovery">>
+                   ,<<"This event is triggered when an end user requests a password recovery link">>
+                   ,<<"end_user">>
+                   ,fun kapi_notifications:password_recovery/1
+                   ,fun kapi_notifications:password_recovery_v/1
+                   ,fun kapi_notifications:publish_password_recovery/1
+                   ,?NOTIFY_PASSWORD_RECOVERY
+                   ,'password_recovery'
+                   ,?PASSWORD_RECOVERY_HEADERS ++ ?OPTIONAL_PASSWORD_RECOVERY_HEADERS
+                  }
+                  ,{<<"first_occurrence">>
+                   ,<<"Account First Occurrance">>
+                   ,<<"This event is triggered when an end user registers the first device and/or places the first call on an account">>
+                   ,<<"end_user">>
+                   ,fun kapi_notifications:first_occurrence/1
+                   ,fun kapi_notifications:first_occurrence_v/1
+                   ,fun kapi_notifications:publish_first_occurrence/1
+                   ,?NOTIFY_FIRST_OCCURRENCE
+                   ,'first_occurrence'
+                   ,?FIRST_OCCURRENCE_HEADERS ++ ?OPTIONAL_FIRST_OCCURRENCE_HEADERS
+                  }
+                  ,{<<"new_account">>
+                   ,<<"New account">>
+                   ,<<"This event is triggered when an end user creates a new account">>
+                   ,<<"end_user">>
+                   ,fun kapi_notifications:new_account/1
+                   ,fun kapi_notifications:new_account_v/1
+                   ,fun kapi_notifications:publish_new_account/1
+                   ,?NOTIFY_NEW_ACCOUNT
+                   ,'new_account'
+                   ,?NEW_ACCOUNT_HEADERS ++ ?OPTIONAL_NEW_ACCOUNT_HEADERS
+                  }
+                  ,{<<"new_user">>
+                   ,<<"New User">>
+                   ,<<"This event is triggered when an end user creates a new user">>
+                   ,<<"end_user">>
+                   ,fun kapi_notifications:new_user/1
+                   ,fun kapi_notifications:new_user_v/1
+                   ,fun kapi_notifications:publish_new_user/1
+                   ,?NOTIFY_NEW_USER
+                   ,'new_user'
+                   ,?NEW_USER_HEADERS ++ ?OPTIONAL_NEW_USER_HEADERS
+                  }
+                  ,{<<"account_zone_change">>
+                   ,<<"Account Zone Change">>
+                   ,<<"This event is triggered when an end user requests the home zone of an account is changed">>
+                   ,<<"end_user">>
+                   ,fun kapi_notifications:account_zone_change/1
+                   ,fun kapi_notifications:account_zone_change_v/1
+                   ,fun kapi_notifications:publish_account_zone_change/1
+                   ,?NOTIFY_ACCOUNT_ZONE_CHANGE
+                   ,'account_zone_change'
+                   ,?ACCOUNT_ZONE_CHANGE_HEADERS ++ ?OPTIONAL_ACCOUNT_ZONE_CHANGE_HEADERS
+                  }
+                  ,{<<"port_unconfirmed">>
+                   ,<<"Port Unconfirmed">>
+                   ,<<"This event is triggered when a port is created, prior to submiting">>
+                   ,<<"port_request">>
+                   ,fun kapi_notifications:port_unconfirmed/1
+                   ,fun kapi_notifications:port_unconfirmed_v/1
+                   ,fun kapi_notifications:publish_port_unconfirmed/1
+                   ,?NOTIFY_PORT_UNCONFIRMED
+                   ,'port_unconfirmed'
+                   ,?PORT_UNCONFIRMED_HEADERS ++ ?OPTIONAL_PORT_UNCONFIRMED_HEADERS
+                  }
+                  ,{<<"port_request">>
+                   ,<<"Port Request">>
+                   ,<<"This event is triggered when a port is submitted for processing">>
+                   ,<<"port_request">>
+                   ,fun kapi_notifications:port_request/1
+                   ,fun kapi_notifications:port_request_v/1
+                   ,fun kapi_notifications:publish_port_request/1
+                   ,?NOTIFY_PORT_REQUEST
+                   ,'port_request'
+                   ,?PORT_REQUEST_HEADERS ++ ?OPTIONAL_PORT_REQUEST_HEADERS
+                  }
+                  ,{<<"port_pending">>
+                   ,<<"Port Pending">>
+                   ,<<"This event is triggered when a port request is accepted and submitted to a carrier">>
+                   ,<<"port_request">>
+                   ,fun kapi_notifications:port_pending/1
+                   ,fun kapi_notifications:port_pending_v/1
+                   ,fun kapi_notifications:publish_port_pending/1
+                   ,?NOTIFY_PORT_PENDING
+                   ,'port_pending'
+                   ,?PORT_PENDING_HEADERS ++ ?OPTIONAL_PORT_PENDING_HEADERS
+                  }
+                  ,{<<"port_scheduled">>
+                   ,<<"Port Scheduled">>
+                   ,<<"This event is triggered when a port is accepted by a carrier and scheduled">>
+                   ,<<"port_request">>
+                   ,fun kapi_notifications:port_scheduled/1
+                   ,fun kapi_notifications:port_scheduled_v/1
+                   ,fun kapi_notifications:publish_port_scheduled/1
+                   ,?NOTIFY_PORT_SCHEDULED
+                   ,'port_scheduled'
+                   ,?PORT_SCHEDULED_HEADERS ++ ?OPTIONAL_PORT_SCHEDULED_HEADERS
+                  }
+                  ,{<<"port_cancel">>
+                   ,<<"Port Cancel">>
+                   ,<<"This event is triggered when a port request is canceled">>
+                   ,<<"port_request">>
+                   ,fun kapi_notifications:port_cancel/1
+                   ,fun kapi_notifications:port_cancel_v/1
+                   ,fun kapi_notifications:publish_port_cancel/1
+                   ,?NOTIFY_PORT_CANCEL
+                   ,'port_cancel'
+                   ,?PORT_CANCEL_HEADERS ++ ?OPTIONAL_PORT_CANCEL_HEADERS
+                  }
+                  ,{<<"port_rejected">>
+                   ,<<"Port Rejected">>
+                   ,<<"This event is triggered when a port request is rejected">>
+                   ,<<"port_request">>
+                   ,fun kapi_notifications:port_rejected/1
+                   ,fun kapi_notifications:port_rejected_v/1
+                   ,fun kapi_notifications:publish_port_rejected/1
+                   ,?NOTIFY_PORT_REJECTED
+                   ,'port_rejected'
+                   ,?PORT_REJECTED_HEADERS ++ ?OPTIONAL_PORT_REJECTED_HEADERS
+                  }
+                  ,{<<"ported">>
+                   ,<<"Ported">>
+                   ,<<"This event is triggered when a port is completed">>
+                   ,<<"port_request">>
+                   ,fun kapi_notifications:ported/1
+                   ,fun kapi_notifications:ported_v/1
+                   ,fun kapi_notifications:publish_ported/1
+                   ,?NOTIFY_PORTED
+                   ,'ported'
+                   ,?PORTED_HEADERS ++ ?OPTIONAL_PORTED_HEADERS
+                  }
+                  ,{<<"port_comment">>
+                   ,<<"Port Comment">>
+                   ,<<"This event is triggered when a comment is left on a port request">>
+                   ,<<"port_request">>
+                   ,fun kapi_notifications:port_comment/1
+                   ,fun kapi_notifications:port_comment_v/1
+                   ,fun kapi_notifications:publish_port_comment/1
+                   ,?NOTIFY_PORT_COMMENT
+                   ,'port_comment'
+                   ,?PORT_COMMENT_HEADERS ++ ?OPTIONAL_PORT_COMMENT_HEADERS
+                  }
+                  ,{<<"cnam_request">>
+                   ,<<"CNAM Update">>
+                   ,<<"This event is triggered when an end user would like the CNAM for a number changed">>
+                   ,<<"end_user">>
+                   ,fun kapi_notifications:cnam_request/1
+                   ,fun kapi_notifications:cnam_request_v/1
+                   ,fun kapi_notifications:publish_cnam_request/1
+                   ,?NOTIFY_CNAM_REQUEST
+                   ,'cnam_requests'
+                   ,?CNAM_REQUEST_HEADERS ++ ?OPTIONAL_CNAM_REQUEST_HEADERS
+                  }
+                  ,{<<"low_balance">>
+                   ,<<"Account Low Balance">>
+                   ,<<"This event is triggered when an account is found with a balance below the notification threshold">>
+                   ,<<"system">>
+                   ,fun kapi_notifications:low_balance/1
+                   ,fun kapi_notifications:low_balance_v/1
+                   ,fun kapi_notifications:publish_low_balance/1
+                   ,?NOTIFY_LOW_BALANCE
+                   ,'low_balance'
+                   ,?LOW_BALANCE_HEADERS ++ ?OPTIONAL_LOW_BALANCE_HEADERS
+                  }
+                  ,{<<"topup">>
+                   ,<<"Account Topup">>
+                   ,<<"This event is triggered when an account automatic top-up is attempted">>
+                   ,<<"system">>
+                   ,fun kapi_notifications:topup/1
+                   ,fun kapi_notifications:topup_v/1
+                   ,fun kapi_notifications:publish_topup/1
+                   ,?NOTIFY_TOPUP
+                   ,'topup'
+                   ,?TOPUP_HEADERS ++ ?OPTIONAL_TOPUP_HEADERS
+                  }
+                  ,{<<"transaction">>
+                   ,<<"Transaction Completed">>
+                   ,<<"This event is triggered when a transaction is attempted">>
+                   ,<<"system">>
+                   ,fun kapi_notifications:transaction/1
+                   ,fun kapi_notifications:transaction_v/1
+                   ,fun kapi_notifications:publish_transaction/1
+                   ,?NOTIFY_TRANSACTION
+                   ,'transaction'
+                   ,?TRANSACTION_HEADERS ++ ?OPTIONAL_TRANSACTION_HEADERS
+                  }
+                  ,{<<"webhook">>
+                   ,<<"Callflow Webhook Triggered">>
+                   ,<<"This event is triggered when a corresponding webhook action in a callflow is reached">>
+                   ,<<"system">>
+                   ,fun kapi_notifications:webhook/1
+                   ,fun kapi_notifications:webhook_v/1
+                   ,fun kapi_notifications:publish_webhook/1
+                   ,?NOTIFY_WEBHOOK_CALLFLOW
+                   ,'webhook'
+                   ,?WEBHOOK_HEADERS ++ ?OPTIONAL_WEBHOOK_HEADERS
+                  }
+                  ,{<<"webhook_disabled">>
+                   ,<<"Webhook Disabled">>
+                   ,<<"This event is triggered when a webhook is disabled">>
+                   ,<<"system">>
+                   ,fun kapi_notifications:webhook_disabled/1
+                   ,fun kapi_notifications:webhook_disabled_v/1
+                   ,fun kapi_notifications:publish_webhook_disabled/1
+                   ,?NOTIFY_WEBHOOK_DISABLED
+                   ,'webhook_disabled'
+                   ,?WEBHOOK_DISABLED_HEADERS ++ ?OPTIONAL_WEBHOOK_DISABLED_HEADERS
+                  }
+                  ,{<<"denied_emergency_bridge">>
+                   ,<<"Emergency Call Failed">>
+                   ,<<"This event is triggered when a call to an number classified as emergency fails">>
+                   ,<<"system">>
+                   ,fun kapi_notifications:denied_emergency_bridge/1
+                   ,fun kapi_notifications:denied_emergency_bridge_v/1
+                   ,fun kapi_notifications:publish_denied_emergency_bridge/1
+                   ,?NOTIFY_DENIED_EMERGENCY_BRIDGE
+                   ,'denied_emergency_bridge'
+                   ,?DENIED_EMERGENCY_BRIDGE_HEADERS ++ ?OPTIONAL_DENIED_EMERGENCY_BRIDGE_HEADERS
+                  }
+                  ,{<<"customer_update">>
+                   ,<<"Customer Update">>
+                   ,<<"This event is triggered when the customer update API is used to deliver a message to the account">>
+                   ,<<"end_user">>
+                   ,fun kapi_notifications:customer_update/1
+                   ,fun kapi_notifications:customer_update_v/1
+                   ,fun kapi_notifications:publish_customer_update/1
+                   ,?NOTIFY_CUSTOMER_UPDATE
+                   ,'customer_update'
+                   ,?CUSTOMER_UPDATE_HEADERS ++ ?OPTIONAL_CUSTOMER_UPDATE_HEADERS
+                  }
+                  ,{<<"service_added">>
+                   ,<<"Service Added">>
+                   ,<<"This event is triggered when an account's billable quantities change">>
+                   ,<<"system">>
+                   ,fun kapi_notifications:service_added/1
+                   ,fun kapi_notifications:service_added_v/1
+                   ,fun kapi_notifications:publish_service_added/1
+                   ,?NOTIFY_SERVICE_ADDED
+                   ,'service_added'
+                   ,?SERVICE_ADDED_HEADERS ++ ?OPTIONAL_SERVICE_ADDED_HEADERS
+                  }
+                  ,{<<"missed_call">>
+                   ,<<"Missed Call Triggered">>
+                   ,<<"This event is triggered when an corresponding missed call action in a callflow is invoked">>
+                   ,<<"call">>
+                   ,fun kapi_notifications:missed_call/1
+                   ,fun kapi_notifications:missed_call_v/1
+                   ,fun kapi_notifications:publish_missed_call/1
+                   ,?NOTIFY_MISSED_CALL
+                   ,'missed_call'
+                   ,?MISSED_CALL_HEADERS ++ ?OPTIONAL_MISSED_CALL_HEADERS
+                  }
+                  ,{<<"system_alert">>
+                   ,<<"System Alert">>
+                   ,<<"This event is triggered to alert the system administrators">>
+                   ,<<"internal">>
+                   ,fun kapi_notifications:system_alert/1
+                   ,fun kapi_notifications:system_alert_v/1
+                   ,fun kapi_notifications:publish_system_alert/1
+                   ,?NOTIFY_SYSTEM_ALERT
+                   ,'system_alerts'
+                   ,?SYSTEM_ALERT_HEADERS ++ ?OPTIONAL_SYSTEM_ALERT_HEADERS
+                  }
+                  ,{<<"skel">>
+                   ,<<"Example Notificaiton">>
+                   ,<<"This event should never be triggered">>
+                   ,<<"internal">>
+                   ,fun kapi_notifications:skel/1
+                   ,fun kapi_notifications:skel_v/1
+                   ,fun kapi_notifications:publish_skel/1
+                   ,?NOTIFY_SKEL
+                   ,'skel'
+                   ,?SKEL_HEADERS ++ ?OPTIONAL_SKEL_HEADERS
+                  }]).
 
--spec definitions() -> definitions().
-definitions() -> ?NOTIFICATIONS.
+-spec metadata() -> metadata().
+metadata() -> ?METADATA.
 
--spec special_notifications() -> [atom()].
-special_notifications() -> ?SPECIAL_NOTIFICATIONS.
+-spec metadata_type(metadata_element()) -> ne_binary().
+metadata_type(Metadata) -> element(1, Metadata).
 
--spec definition_type(definition()) -> ne_binary().
-definition_type({Type, _, _, _, _, _, _, _}) -> Type.
+-spec metadata_friendly_name(metadata_element()) -> ne_binary().
+metadata_friendly_name(Metadata) -> element(2, Metadata).
 
--spec definition_friendly_name(definition()) -> ne_binary().
-definition_friendly_name({_, FriendlyName, _, _, _, _, _, _}) -> FriendlyName.
+-spec metadata_description(metadata_element()) -> ne_binary().
+metadata_description(Metadata) -> element(3, Metadata).
 
--spec definition_build_function(definition()) -> fun((api_terms()) -> api_formatter_return()).
-definition_build_function({_, _, Builder, _, _, _, _, _}) -> Builder.
+-spec metadata_category(metadata_element()) -> ne_binary().
+metadata_category(Metadata) -> element(4, Metadata).
 
--spec definition_validate_function(definition()) -> fun((api_terms()) -> boolean()).
-definition_validate_function({_, _, _, Validator, _, _, _, _}) -> Validator.
+-spec metadata_build_function(metadata_element()) -> fun((api_terms()) -> api_formatter_return()).
+metadata_build_function(Metadata) -> element(5, Metadata).
 
--spec definition_publish_function(definition()) -> fun((api_terms()) -> api_formatter_return()).
-definition_publish_function({_, _, _, _, Publisher, _, _, _}) -> Publisher.
+-spec metadata_validate_function(metadata_element()) -> fun((api_terms()) -> boolean()).
+metadata_validate_function(Metadata) -> element(6, Metadata).
 
--spec definition_binding(definition()) -> ne_binary().
-definition_binding({_, _, _, _, _, Binding, _, _}) -> Binding.
+-spec metadata_publish_function(metadata_element()) -> fun((api_terms()) -> api_formatter_return()).
+metadata_publish_function(Metadata) -> element(7, Metadata).
 
--spec definition_restrict_to(definition()) -> ne_binary().
-definition_restrict_to({_, _, _, _, _, _, RestrictTo, _}) -> RestrictTo.
+-spec metadata_binding(metadata_element()) -> ne_binary().
+metadata_binding(Metadata) -> element(8, Metadata).
 
--spec definition_headers(definition()) -> ne_binaries().
-definition_headers({_, _, _, _, _, _, _, Headers}) -> Headers.
+-spec metadata_restrict_to(metadata_element()) -> ne_binary().
+metadata_restrict_to(Metadata) -> element(9, Metadata).
+
+-spec metadata_headers(metadata_element()) -> ne_binaries().
+metadata_headers(Metadata) -> element(10, Metadata).
 
 -spec account_id(api_terms()) -> api_ne_binary().
 account_id('undefined') -> 'undefined';
@@ -1008,11 +1083,11 @@ headers(<<"fax_outbound_error_to_email">>) ->
 headers(<<"fax_outbound_smtp_error">>) ->
     headers(<<"outbound_smtp_fax_error">>);
 headers(Type) ->
-    case props:get_value(Type, definitions()) of
+    case props:get_value(Type, metadata()) of
         'undefined' ->
             lager:warning("no notification headers for ~s", [Type]),
             [];
-        Definition -> definition_headers(Definition)
+        Metadata -> metadata_headers(Metadata)
     end.
 
 %%--------------------------------------------------------------------
@@ -1715,9 +1790,9 @@ bind_to_q(Q, ['fax_error'|T]) ->
     'ok' = amqp_util:bind_q_to_notifications(Q, ?NOTIFY_FAX_OUTBOUND_ERROR),
     bind_to_q(Q, T);
 bind_to_q(Q, [RestrictTo|T]) ->
-    case [definition_binding(Definition)
-         || Definition <- definitions()
-          ,definition_restrict_to(Definition) =:= RestrictTo
+    case [metadata_binding(Metadata)
+         || Metadata <- metadata()
+          ,metadata_restrict_to(Metadata) =:= RestrictTo
          ]
     of
         [Binding] ->
@@ -1745,9 +1820,9 @@ unbind_q_from(Q, ['fax_error'|T]) ->
     'ok' = amqp_util:unbind_q_from_notifications(Q,?NOTIFY_FAX_INBOUND_ERROR),
     unbind_q_from(Q, T);
 unbind_q_from(Q, [RestrictTo|T]) ->
-    case [definition_binding(Definition)
-         || Definition <- definitions()
-          ,definition_restrict_to(Definition) =:= RestrictTo
+    case [metadata_binding(Metadata)
+         || Metadata <- metadata()
+          ,metadata_restrict_to(Metadata) =:= RestrictTo
          ]
     of
         [Binding] ->

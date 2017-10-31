@@ -13,8 +13,8 @@
 -include("webhooks.hrl").
 
 -define(ID, kz_term:to_binary(?MODULE)).
--define(NAME, <<"channel_create">>).
--define(DESC, <<"Events when new calls start">>).
+-define(NAME, <<"Channel Create">>).
+-define(DESC, <<"This webhook is triggered when a new channel is created">>).
 -define(METADATA
        ,kz_json:from_list([{<<"_id">>, ?ID}
                           ,{<<"name">>, ?NAME}

@@ -13,8 +13,8 @@
 -include("webhooks.hrl").
 
 -define(ID, kz_term:to_binary(?MODULE)).
--define(NAME, <<"channel_answer">>).
--define(DESC, <<"Events for when the channel is answered by the endpoint">>).
+-define(NAME, <<"Channel Answer">>).
+-define(DESC, <<"This webhook is triggered when a channel establishes two-way audio, such as a voicemail box or the called party answering">>).
 -define(METADATA
        ,kz_json:from_list([{<<"_id">>, ?ID}
                           ,{<<"name">>, ?NAME}

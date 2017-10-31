@@ -15,34 +15,6 @@
 -include("webhooks.hrl").
 -include_lib("kazoo_amqp/include/kapi_conf.hrl").
 
--define(ID, kz_term:to_binary(?MODULE)).
--define(NAME, <<"notifications">>).
--define(DESC, <<"Receive notifications as webhooks">>).
-
--define(NOTIFICATION_TYPES
-       ,[kapi_notifications:definition_type(Definition) || Definition <- kapi_notifications:definitions()]
-       ).
-
--define(TYPE_MODIFIER
-       ,kz_json:from_list(
-          [{<<"type">>, <<"array">>}
-          ,{<<"description">>, <<"A list of notification types to handle">>}
-          ,{<<"items">>, ?NOTIFICATION_TYPES}
-          ])).
-
--define(MODIFIERS
-       ,kz_json:from_list(
-          [{<<"type">>, ?TYPE_MODIFIER}]
-       )).
-
--define(METADATA
-       ,kz_json:from_list(
-          [{<<"_id">>, ?ID}
-          ,{<<"name">>, ?NAME}
-          ,{<<"description">>, ?DESC}
-          ,{<<"modifiers">>, ?MODIFIERS}
-          ])).
-
 %%--------------------------------------------------------------------
 %% @public
 %% @doc
@@ -50,7 +22,18 @@
 %%--------------------------------------------------------------------
 -spec init() -> 'ok'.
 init() ->
-    webhooks_util:init_metadata(?ID, ?METADATA).
+    init(get_notifications_metadata()).
+
+-spec init([]) -> 'ok'.
+init([]) -> 'ok';
+init([Metadata|Rest]) ->
+    Id = kapi_notifications:metadata_type(Metadata),
+    Props = [{<<"category">>, kapi_notifications:metadata_category(Metadata)},
+            ,{<<"name">>, kapi_notifications:metadata_friendly_name(Metadata)}
+            ,{<<"description">>, kapi_notifications:metadata_description(Metadata)},
+            ],
+    _ = webhooks_util:init_metadata(Id, kz_json:from_list(Props)),
+    init(Rest).
 
 %%--------------------------------------------------------------------
 %% @public
@@ -65,6 +48,11 @@ bindings_and_responders() ->
                   }
                  ],
     {Bindings, Responders}.
+
+-spec bindings() -> gen_listener:bindings().
+bindings() ->
+    Restrictions = [kapi_notifications:metadata_restrict_to(Metadata) || Metadata <- get_notifications_metadata()],
+    [{'notifications', [{'restrict_to', Restrictions}]}].
 
 %%--------------------------------------------------------------------
 %% @public
@@ -108,25 +96,15 @@ match_action_type(#webhook{hook_event = ?NAME
     kz_json:get_value(<<"type">>, JObj) =:= Type;
 match_action_type(#webhook{}, _Type) -> 'true'.
 
-%%%===================================================================
-%%% Internal functions
-%%%===================================================================
-
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
--spec bindings() -> gen_listener:bindings().
-bindings() ->
-    [{'notifications', [{'test', 'true'}]}].
-
-%%--------------------------------------------------------------------
-%% @private
-%% @doc
-%% @end
-%%--------------------------------------------------------------------
 -spec format_event(kz_json:object(), ne_binary()) -> kz_json:object().
 format_event(JObj, _AccountId) ->
     kz_json:normalize(JObj).
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% @end
+%%--------------------------------------------------------------------
+-spec get_notification_metadata() -> kapi_notifications:metadata().
+get_notifications_metadata() ->
+    [Metadata || Metadata <- kapi_notifications:metadata(), kapi_notifications:metadata_category() /= <<"internal">>].

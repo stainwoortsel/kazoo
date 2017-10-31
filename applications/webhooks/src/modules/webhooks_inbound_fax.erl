@@ -14,8 +14,8 @@
 -include("webhooks.hrl").
 
 -define(ID, kz_term:to_binary(?MODULE)).
--define(NAME, <<"inbound_fax">>).
--define(DESC, <<"Inbound faxes (or errors if they occur)">>).
+-define(NAME, <<"Inbound Fax">>).
+-define(DESC, <<"This webhook is triggered when an inbound fax is recieved or if there is an error during an attempt">>).
 -define(METADATA
        ,kz_json:from_list([{<<"_id">>, ?ID}
                           ,{<<"name">>, ?NAME}

@@ -17,9 +17,26 @@
         ,reset_webhooks_list/0
         ,flush_account_failures/1
         ,flush_hook_failures/2
+        ,migrate/0
         ]).
 
 -include("webhooks.hrl").
+
+
+migrate() ->
+    {'ok', JObjs} = kz_datamgr:all_docs(<<"webhooks">>, [include_docs]),
+    migrate([kz_json:get_value(<<"doc">>, JObj) || JObj <- JObjs, binary:match(kz_doc:id(JObj), <<"_design/">>) == 'nomatch']).
+
+migrate([]) -> 'ok';
+migrate([JObj|JObjs]) ->
+    case kz_json:get_value(<<"hook">>, JObj) of
+        <<"inbound_fax">> -> JObj;
+        _Else -> 'ok'
+    end, migrate(JObjs).
+
+migrate_inbound_fax(JObj) ->
+    %% if version 1 of the document create a second inbound_fax_error clone
+    'ok'.
 
 -spec hooks_configured() -> 'ok'.
 -spec hooks_configured(ne_binary()) -> 'ok'.

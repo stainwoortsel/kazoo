@@ -13,8 +13,8 @@
 -include("webhooks.hrl").
 
 -define(ID, kz_term:to_binary(?MODULE)).
--define(NAME, <<"channel_destroy">>).
--define(DESC, <<"Events when calls end">>).
+-define(NAME, <<"Channel Destroy">>).
+-define(DESC, <<"This webhook is triggered when a channel is destoryed, usually as a result of a hangup">>).
 -define(METADATA
        ,kz_json:from_list([{<<"_id">>, ?ID}
                           ,{<<"name">>, ?NAME}
