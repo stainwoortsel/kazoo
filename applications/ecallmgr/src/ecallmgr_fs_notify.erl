@@ -183,7 +183,6 @@ send_mwi_update(JObj, Username, Realm, Node, Registration) ->
                       ,{<<"from-uri">>, From}
                       ,{<<"event-string">>, <<"message-summary">>}
                       ,{<<"content-type">>, <<"application/simple-message-summary">>}
-                      ,{<<"content-length">>, kz_term:to_binary(length(Body))}
                       ,{<<"body">>, kz_term:to_binary(Body)}
                       ],
             Resp = freeswitch:sendevent(Node, 'NOTIFY', Headers),
@@ -215,7 +214,6 @@ register_overwrite(JObj, Props) ->
                          ,{<<"from-uri">>, SipUri}
                          ,{<<"event-str">>, <<"registration-overwrite">>}
                          ,{<<"content-type">>, <<"text/plain">>}
-                         ,{<<"content-length">>, kz_term:to_binary(length(PrevBody))}
                          ,{<<"body">>, PrevBody}
                          ],
     NewContactHeaders = [{<<"profile">>, <<?DEFAULT_FS_PROFILE>>}
@@ -225,7 +223,6 @@ register_overwrite(JObj, Props) ->
                         ,{<<"from-uri">>, SipUri}
                         ,{<<"event-str">>, <<"registration-overwrite">>}
                         ,{<<"content-type">>, <<"text/plain">>}
-                        ,{<<"content-length">>, kz_term:to_binary(length(NewBody))}
                         ,{<<"body">>, NewBody}
                         ],
     case PrevContact of
