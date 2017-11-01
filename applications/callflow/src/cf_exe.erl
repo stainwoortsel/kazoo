@@ -436,7 +436,7 @@ handle_cast({'continue', Key}, #state{flow=Flow
     case kz_json:get_value([<<"children">>, Key], Flow) of
         'undefined' when Key =:= <<"_">> ->
             lager:info("wildcard child does not exist, we are lost...hanging up"),
-            maybe_run_destory_handlers(Call, kz_json:new(), Handlers),
+            maybe_run_destroy_handlers(Call, kz_json:new(), Handlers),
             stop(self()),
             {'noreply', State};
         'undefined' ->
@@ -830,7 +830,7 @@ log_call_information(Call) ->
 handle_channel_destroyed(Self, Notify, JObj, Call, DestroyHandlers) ->
     channel_destroyed(Self),
     relay_message(Notify, JObj),
-    maybe_run_destory_handlers(Call, JObj, DestroyHandlers).
+    maybe_run_destroy_handlers(Call, JObj, DestroyHandlers).
 
 -spec handle_channel_transfer(kapps_call:call(), kz_json:object()) -> 'ok'.
 handle_channel_transfer(Call, JObj) ->
@@ -883,8 +883,8 @@ relay_message(Notify, Message) ->
         ],
     'ok'.
 
--spec maybe_run_destory_handlers(kapps_call:call(), kz_json:object(), list()) -> 'ok'.
-maybe_run_destory_handlers(Call, JObj, Handlers) ->
+-spec maybe_run_destroy_handlers(kapps_call:call(), kz_json:object(), list()) -> 'ok'.
+maybe_run_destroy_handlers(Call, JObj, Handlers) ->
     _ = [erlang:apply(M, F, [Call, JObj | Args]) || {M, F, Args} <- Handlers],
     'ok'.
 
