@@ -55,6 +55,9 @@
                     ,{{?MODULE, 'handle_conference_error'}
                      ,[{<<"conference">>, <<"error">>}]
                      }
+                    ,{'conf_config_req'
+                     ,[{<<"conference">>, <<"config_req">>}]
+                     }
                     ]).
 -define(QUEUE_NAME, <<>>).
 -define(QUEUE_OPTIONS, []).
@@ -264,7 +267,15 @@ handle_cast({'set_conference', Conference}, Participant=#participant{call=Call})
     ConferenceId = kapps_conference:id(Conference),
     CallId = kapps_call:call_id(Call),
     lager:debug("received conference data for conference ~s", [ConferenceId]),
-    gen_listener:add_binding(self(), 'conference', [{'restrict_to', [{'event', {ConferenceId,CallId}}] }]),
+    gen_listener:add_binding(self(), 'conference', [{'restrict_to', [{'event', {ConferenceId, CallId}}]}]),
+    kz_util:spawn(fun gen_listener:add_queue/4
+                 ,[self()
+                  ,<<"config-", ConferenceId/binary>>
+                  ,[{'queue_options', [{'exclusive', 'false'}]}
+                   ,{'consume_options', [{'exclusive', 'false'}]}
+                   ]
+                  ,[{'conference', [{'restrict_to', [{'config', get_profile_name(Conference)}]}, 'federate']}]
+                  ]),
     {'noreply', Participant#participant{conference=Conference}};
 handle_cast({'set_discovery_event', DE}, #participant{}=Participant) ->
     {'noreply', Participant#participant{discovery_event=DE}};
@@ -340,7 +351,7 @@ handle_event(JObj, #participant{call_event_consumers=Consumers
             gen_listener:cast(Srv, 'hungup');
         {_, _} -> 'ok'
     end,
-    {'reply', [{'call_event_consumers', Consumers}]}.
+    {'reply', [{'call_event_consumers', Consumers}, {'server', Srv}]}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -483,15 +494,11 @@ name_pronounced_headers({_, AccountId, MediaId}) ->
 
 -spec send_conference_command(kapps_conference:conference(), kapps_call:call()) -> 'ok'.
 send_conference_command(Conference, Call) ->
-    Profile = list_to_binary([kapps_conference:account_id(Conference)
-                             ,"_"
-                             ,kapps_conference:profile(Conference)
-                             ]),
     kapps_call_command:conference(kapps_conference:id(Conference)
                                  ,is_muted(Conference)
                                  ,is_deaf(Conference)
                                  ,kapps_conference:moderator(Conference)
-                                 ,Profile
+                                 ,get_profile_name(Conference)
                                  ,Call
                                  ).
 
@@ -567,3 +574,10 @@ play_entry_tone_media(Tone, Conference) ->
         MediaId = ?NE_BINARY -> kz_media_util:media_path(MediaId, kapps_conference:account_id(Conference));
         _Else -> Tone
     end.
+
+-spec get_profile_name(kapps_conference:conference()) -> ne_binary().
+get_profile_name(Conference) ->
+    list_to_binary([kapps_conference:id(Conference)
+                   ,"_"
+                   ,kapps_conference:account_id(Conference)
+                   ]).
