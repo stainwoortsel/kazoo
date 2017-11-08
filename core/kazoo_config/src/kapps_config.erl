@@ -1072,7 +1072,8 @@ remove_config_setting(Id, Setting) when is_binary(Id) ->
 remove_config_setting(JObj, Setting) ->
     Id = kz_doc:id(JObj),
     Keys = [{Id, Node, Setting}
-            || Node <- kz_doc:get_public_keys(JObj)
+            || Node <- kz_doc:get_public_keys(JObj),
+               kz_json:is_json_object(Node, JObj)
            ],
     remove_config_setting(Keys, JObj, []).
 
