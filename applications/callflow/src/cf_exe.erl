@@ -894,7 +894,7 @@ get_pid(_) -> 'undefined'.
 
 -spec hangup_call(kapps_call:call()) -> 'ok'.
 hangup_call(Call) ->
-    kapps_call_command:hangup(kapps_call:clear_helpers(Call)).
+    kapps_call_command:queued_hangup(kapps_call:clear_helpers(Call)).
 
 -spec handle_channel_pivoted(server_ref(), api_pid_ref(), kz_call_event:doc(), kapps_call:call()) -> 'ok'.
 handle_channel_pivoted(Self, PidRef, JObj, Call) ->
