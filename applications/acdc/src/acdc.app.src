@@ -12,6 +12,7 @@
                  , kazoo
                  , kazoo_amqp
                  , kazoo_data
+                 , kazoo_events
                  , kazoo_modb
                  , kazoo_apps
                  , webseq
