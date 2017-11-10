@@ -29,6 +29,9 @@ handle(Data, Call) ->
             lager:info("completed successful bridge to the device"),
             cf_exe:stop(Call);
         {'fail', _}=Reason -> maybe_handle_bridge_failure(Reason, Call);
+        {'error', timeout} ->
+            lager:info("timeout bridging to the device"),
+            cf_exe:continue(Call);
         {'error', _R} ->
             lager:info("error bridging to device: ~s"
                       ,[kz_json:get_ne_binary_value(<<"Error-Message">>, _R)]
