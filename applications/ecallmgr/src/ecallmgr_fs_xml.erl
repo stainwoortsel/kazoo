@@ -452,7 +452,7 @@ route_resp_ccvs(JObj) ->
            ],
     action_el(<<"kz_multiset">>, route_ccvs_list(CCVs)).
 
--spec route_resp_cavs(kz_json:object()) -> xml_els().
+-spec route_resp_cavs(kz_json:object()) -> xml_el() | 'undefined'.
 route_resp_cavs(JObj) ->
     case kz_json:get_json_value(<<"Custom-Application-Vars">>, JObj) of
         'undefined' -> 'undefined';

@@ -384,16 +384,10 @@ authz_req(Props) ->
       ,{<<"Caller-ID-Number">>
        ,kz_evt_freeswitch:caller_id_number(Props, kz_privacy:anonymous_caller_id_number(AccountId))
        }
-<<<<<<< Upstream, based on 2600hz/master
-      ,{<<"From-Network-Addr">>, kzd_freeswitch:from_network_ip(Props)}
-      ,{<<"From-Network-Port">>, kzd_freeswitch:from_network_port(Props)}
-      ,{<<"Custom-Channel-Vars">>, kzd_freeswitch:ccvs(Props)}
-      ,{<<"Custom-Application-Vars">>, kzd_freeswitch:cavs(Props)}
-=======
       ,{<<"From-Network-Addr">>, kz_evt_freeswitch:from_network_ip(Props)}
       ,{<<"From-Network-Port">>, kz_evt_freeswitch:from_network_port(Props)}
       ,{<<"Custom-Channel-Vars">>, kz_evt_freeswitch:ccvs(Props)}
->>>>>>> 5501d87 update some types
+      ,{<<"Custom-Application-Vars">>, kz_evt_freeswitch:cavs(Props)}
        | kz_api:default_headers(?APP_NAME, ?APP_VERSION)
       ]).
 
