@@ -103,6 +103,8 @@
                  ,is_onhold = 'false' :: boolean() | '_'
                  ,cavs :: api_object() | '_'
                  ,ccvs :: api_object() | '_'
+                 ,from :: api_binary() | '_'
+                 ,to :: api_binary() | '_'
                  }).
 
 -type channel() :: #channel{}.
@@ -399,7 +401,7 @@
                    ,{record, ['RECORD_START', 'RECORD_STOP']}
                    ,{callflow, ['ROUTE_WINNER', 'CHANNEL_EXECUTE_COMPLETE']}
                    ,{presence, ['PRESENCE_IN']}
-                   ,{channel_full_update, ['CHANNEL_DATA','CALL_UPDATE', 'CALL_SECURE']}
+                   ,{channel_full_update, ['CHANNEL_DATA','CHANNEL_SYNC','CALL_UPDATE', 'CALL_SECURE']}
                    ,{channel_update, ['CHANNEL_HOLD','CHANNEL_UNHOLD']}
                    ,{conference, ['conference::maintenance']}
                    ,{fax, ?FAX_EVENTS}
