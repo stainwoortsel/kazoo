@@ -184,8 +184,8 @@ maybe_retrieve_slot(Slot) ->
     end.
 
 -spec retrieve_slot(ne_binary(), kapps_call:call()) ->
-                                 'ok' |
-                                 {'error', 'timeout' | 'failed'}.
+                           'ok' |
+                           {'error', 'timeout' | 'failed'}.
 retrieve_slot(ParkedCall, Call) ->
     lager:info("retrieved parked call from slot, maybe bridging to caller ~s", [ParkedCall]),
     _ = send_pickup(ParkedCall, Call),
