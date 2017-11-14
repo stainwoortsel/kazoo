@@ -762,7 +762,7 @@ create_from_response(Req, Context, Accept) ->
                  end,
     case to_fun(Context, Accept, DefaultFun) of
         'to_json' -> api_util:create_push_response(Req, Context);
-        'send_file' -> api_util:create_push_file_response(Req, Context);
+        'send_file' -> api_util:create_push_response(Req, Context, fun api_util:create_resp_file/2);
         _ ->
             %% sending json for now until we implement other types
             api_util:create_push_response(Req, Context)
@@ -774,17 +774,13 @@ to_json(Req, Context) ->
     to_json(Req, Context, accept_override(Context)).
 
 to_json(Req0, Context0, 'undefined') ->
-    lager:debug("run: to_json"),
-    [{Mod, _Params}|_] = cb_context:req_nouns(Context0),
-    Verb = cb_context:req_verb(Context0),
-    Event = api_util:create_event_name(Context0, [<<"to_json">>
-                                                 ,kz_term:to_lower_binary(Verb)
-                                                 ,Mod
-                                                 ]),
-    {Req1, Context1} = crossbar_bindings:fold(Event, {Req0, Context0}),
-    case cb_context:fetch(Context1, 'is_chunked') of
-        'true' -> {'halt', Req1, Context1};
-        _ -> api_util:create_pull_response(Req1, Context1)
+    case cb_context:fetch(Context0, 'is_chunked') of
+        'true' -> to_chunk(<<"to_json">>, {Req0, Context0});
+        _ ->
+            lager:debug("run: to_json"),
+            Event = to_fun_event_name(<<"to_json">>, Context0),
+            {Req1, Context1} = crossbar_bindings:fold(Event, {Req0, Context0}),
+            api_util:create_pull_response(Req1, Context1)
     end;
 to_json(Req, Context, <<"csv">>) ->
     lager:debug("overridding json with csv builder"),
@@ -865,7 +861,7 @@ resp_error_code_for_range({_Content, _Start, _End, _Length, _FileLength}) -> 206
 -spec send_file(cowboy_req:req(), cb_context:context()) -> api_util:pull_file_response_return().
 send_file(Req, Context) ->
     lager:debug("run: send_file"),
-    api_util:create_pull_file_response(Req, Context).
+    api_util:create_pull_response(Req, Context, fun api_util:create_resp_file/2).
 
 -spec to_fun(cb_context:context(), ne_binary(), atom()) -> atom().
 -spec to_fun(cb_context:context(), ne_binary(), ne_binary(), atom()) -> atom().
@@ -896,46 +892,14 @@ accept_matches_provided(Major, Minor, CTPs) ->
 
 -spec to_csv(cowboy_req:req(), cb_context:context()) ->
                     {iolist(), cowboy_req:req(), cb_context:context()}.
-to_csv(Req, Context) ->
-    lager:debug("run: to_csv"),
-    [{Mod, _Params}|_] = cb_context:req_nouns(Context),
-    Verb = cb_context:req_verb(Context),
-    Event = api_util:create_event_name(Context, [<<"to_csv">>
-                                                ,kz_term:to_lower_binary(Verb)
-                                                ,Mod
-                                                ]),
-    {Req1, Context1} = crossbar_bindings:fold(Event, {Req, Context}),
-    case cb_context:fetch(Context1, 'is_chunked') of
-        'true' -> {'halt', Req1, Context1};
+to_csv(Req0, Context0) ->
+    case cb_context:fetch(Context0, 'is_chunked') of
+        'true' -> to_chunk(<<"to_csv">>, {Req0, Context0});
         _ ->
-            RespHeaders =
-                props:insert_values([{<<"content-type">>, <<"application/octet-stream">>}
-                                    ,{<<"content-disposition">>, <<"attachment; filename=\"data.csv\"">>}
-                                    ]
-                                   ,cb_context:resp_headers(Context1)
-                                   ),
-            {csv_body(cb_context:resp_data(Context))
-            ,api_util:set_resp_headers(Req1, cb_context:set_resp_headers(Context1, RespHeaders))
-            ,Context1
-            }
-    end.
-
--spec csv_body(ne_binary() | kz_json:object()| kz_json:objects()) -> iolist().
-csv_body(Body=?NE_BINARY) -> Body;
-csv_body(JObjs) when is_list(JObjs) ->
-    FlattenJObjs = [kz_json:flatten(JObj, 'binary_join') || JObj <- JObjs],
-    CsvOptions = [{'transform_fun', fun map_empty_json_value_to_binary/2}
-                 ,{'header_map', ?CSV_HEADER_MAP}
-                 ],
-    kz_csv:from_jobjs(FlattenJObjs, CsvOptions);
-csv_body(JObj) ->
-    csv_body([JObj]).
-
--spec map_empty_json_value_to_binary(kz_json:key(), kz_json:term()) -> {kz_json:key(), kz_json:term()}.
-map_empty_json_value_to_binary(Key, Value) ->
-    case kz_json:is_json_object(Value) of
-        'true' -> {Key, <<>>};
-        'false' -> {Key, Value}
+            lager:debug("run: to_csv"),
+            Event = to_fun_event_name(<<"to_csv">>, Context0),
+            {Req1, Context1} = crossbar_bindings:fold(Event, {Req0, Context0}),
+            api_util:create_pull_response(Req1, Context1, fun api_util:create_csv_resp_content/2)
     end.
 
 -spec to_pdf(cowboy_req:req(), cb_context:context()) ->
@@ -944,12 +908,7 @@ map_empty_json_value_to_binary(Key, Value) ->
                     {binary(), cowboy_req:req(), cb_context:context()}.
 to_pdf(Req, Context) ->
     lager:debug("run: to_pdf"),
-    [{Mod, _Params}|_] = cb_context:req_nouns(Context),
-    Verb = cb_context:req_verb(Context),
-    Event = api_util:create_event_name(Context, [<<"to_pdf">>
-                                                ,kz_term:to_lower_binary(Verb)
-                                                ,Mod
-                                                ]),
+    Event = to_fun_event_name(<<"to_pdf">>, Context),
     {Req1, Context1} = crossbar_bindings:fold(Event, {Req, Context}),
     to_pdf(Req1, Context1, cb_context:resp_data(Context1)).
 
@@ -966,6 +925,18 @@ to_pdf(Req, Context, RespData) ->
     ,Context
     }.
 
+-spec to_chunk(ne_binary(), cb_cowboy_payload()) -> {'halt', cowboy_req:req(), cb_context:context()}.
+to_chunk(ToFun, {_, Context0}=Payload) ->
+    Event = to_fun_event_name(ToFun, Context0),
+    {Req1, Context1} = crossbar_bindings:fold(Event, Payload),
+    {'halt', Req1, Context1}.
+
+-spec to_fun_event_name(ne_binary(), cb_contextL:context()) -> ne_binary().
+to_fun_event_name(ToThing, Context) ->
+    [{Mod, _Params}|_] = cb_context:req_nouns(Context),
+    Verb = cb_context:req_verb(Context),
+    api_util:create_event_name(Context, [ToThing, kz_term:to_lower_binary(Verb), Mod]).
+
 -spec accept_override(cb_context:context()) -> api_binary().
 accept_override(Context) ->
     cb_context:req_value(Context, <<"accept">>).
@@ -976,7 +947,7 @@ multiple_choices(Req, Context) ->
     {'false', Req, Context}.
 
 -spec generate_etag(cowboy_req:req(), cb_context:context()) ->
-                           {ne_binary(), cowboy_req:req(), cb_context:context()}.
+                           {api_ne_binary(), cowboy_req:req(), cb_context:context()}.
 generate_etag(Req0, Context0) ->
     Event = api_util:create_event_name(Context0, <<"etag">>),
     {Req1, Context1} = crossbar_bindings:fold(Event, {Req0, Context0}),

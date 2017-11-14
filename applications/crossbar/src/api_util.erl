@@ -29,10 +29,10 @@
         ,succeeded/1
         ,execute_request/2
         ,finish_request/2
-        ,create_push_response/2, create_push_file_response/2
+        ,create_push_response/2, create_push_response/3
         ,set_resp_headers/2
-        ,create_resp_content/2
-        ,create_pull_response/2, create_pull_file_response/2
+        ,create_resp_content/2, create_resp_file/2, create_csv_resp_content/2
+        ,create_pull_response/2, create_pull_response/3
         ,halt/2
         ,content_type_matches/2
         ,ensure_content_type/1
@@ -1227,6 +1227,16 @@ create_resp_content(Req0, Context) ->
             {<<"failure in request, contact support">>, Req0}
     end.
 
+-spec create_csv_resp_content(cowboy_req:req(), cb_context:context()) ->
+                              {resp_file(), cowboy_req:req()}.
+create_csv_resp_content(Req, Context) ->
+    Content = csv_body(cb_context:resp_data(Context)),
+    ContextHeaders = cb_context:resp_headers(Context),
+    Headers = [{<<"content-type">>, props:get_value(<<"content-type">>, ContextHeaders, <<"text/csv">>)}
+              ,{<<"content-disposition">>, props:get_value(<<"content-disposition">>, ContextHeaders, <<"attachment; filename=\"data.csv\"">>)}
+              ],
+    {Content, lists:foldl(fun({H, V}, R) -> cowboy_req:set_resp_header(H, V, R) end, Req, Headers)}.
+
 -spec create_resp_file(cowboy_req:req(), cb_context:context()) ->
                               {resp_file(), cowboy_req:req()}.
 create_resp_file(Req, Context) ->
@@ -1247,6 +1257,24 @@ get_encode_options(Context) ->
         'false' -> []
     end.
 
+-spec csv_body(ne_binary() | kz_json:object() | kz_json:objects()) -> iolist().
+csv_body(Body=?NE_BINARY) -> Body;
+csv_body(JObjs) when is_list(JObjs) ->
+    FlattenJObjs = [kz_json:flatten(JObj, 'binary_join') || JObj <- JObjs],
+    CsvOptions = [{'transform_fun', fun map_empty_json_value_to_binary/2}
+                 ,{'header_map', ?CSV_HEADER_MAP}
+                 ],
+    kz_csv:from_jobjs(FlattenJObjs, CsvOptions);
+csv_body(JObj) ->
+    csv_body([JObj]).
+
+-spec map_empty_json_value_to_binary(kz_json:key(), kz_json:term()) -> {kz_json:key(), kz_json:term()}.
+map_empty_json_value_to_binary(Key, Value) ->
+    case kz_json:is_json_object(Value) of
+        'true' -> {Key, <<>>};
+        'false' -> {Key, Value}
+    end.
+
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
@@ -1265,12 +1293,6 @@ create_push_response(Req0, Context, Fun) ->
     {Content, Req1} = Fun(Req0, Context),
     Req2 = set_resp_headers(Req1, Context),
     {succeeded(Context), cowboy_req:set_resp_body(Content, Req2), Context}.
-
--spec create_push_file_response(cowboy_req:req(), cb_context:context()) ->
-                                       {boolean(), cowboy_req:req(), cb_context:context()}.
-create_push_file_response(Req, Context) ->
-    create_push_response(Req, Context, fun create_resp_file/2).
-
 
 %%--------------------------------------------------------------------
 %% @private
@@ -1299,23 +1321,17 @@ create_pull_response(Req0, Context, Fun) ->
     end.
 
 -spec maybe_set_pull_response_stream(text() | resp_file()) -> text() | pull_file_resp().
-maybe_set_pull_response_stream({I, F}) when is_integer(I)
-                                            andalso is_function(F,2) ->
-    {'stream', I, F};
+maybe_set_pull_response_stream({FileLength, TransportFun})
+  when is_integer(FileLength)
+       andalso is_function(TransportFun, 2) ->
+    {'stream', FileLength, TransportFun};
 maybe_set_pull_response_stream(Other) ->
     Other.
-
--spec create_pull_file_response(cowboy_req:req(), cb_context:context()) ->
-                                       {pull_file_resp(), cowboy_req:req(), cb_context:context()} |
-                                       halt_return().
-create_pull_file_response(Req, Context) ->
-    create_pull_response(Req, Context, fun create_resp_file/2).
-
 
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% This function extracts the reponse fields and puts them in a proplist
+%% This function extracts the response fields and puts them in a proplist
 %% @end
 %%--------------------------------------------------------------------
 -spec create_resp_envelope(cb_context:context()) -> kz_json:object().
