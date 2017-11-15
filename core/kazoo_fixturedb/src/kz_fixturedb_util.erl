@@ -212,7 +212,7 @@ update_pvt_doc_hash(Path) ->
 %%% Internal functions
 %%%===================================================================
 
--spec read_json(file:filename_all()) -> {ok, kz_json:object()} | {error, not_found}.
+-spec read_json(file:filename_all()) -> {ok, kz_json:object() | kz_json:objects()} | {error, not_found}.
 read_json(Path) ->
     case read_file(Path) of
         {ok, Bin} -> {ok, kz_json:decode(Bin)};

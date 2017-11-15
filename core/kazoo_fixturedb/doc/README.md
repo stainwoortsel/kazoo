@@ -1,12 +1,12 @@
 # Kazoo FixtureDB
 
-What can you say about a data application? That it loves to be distributed and fault tolerance? That it listens to data streams and not understand a bit? yeah, that.
+What can you say about a data application? That it loves to be distributed and fault tolerant? That it listens to data streams and not understand a bit? yeah, that.
 
 ## Overview
 
 General speaking, FixtureDB removes dependency of Kazoo Data Manager for AMQP and Kazoo Cache and removes the burden of isolating source codes with `-ifdef(TEST)` when it comes to reading from database, which in parts result in a tiny little bit more coverage (if any).
 
-FixtureDB acts as central repository for all fixtures when we simply use during tests.
+FixtureDB acts as central repository for all fixtures which we simply use during tests.
 
 When writing your EUnit test you can use [_fixture_ test representation](http://erlang.org/doc/apps/eunit/chapter.html#Fixtures) to setup a dummy connection to FixtureDB, and cleanup the connection later.
 
@@ -64,7 +64,7 @@ In the test which need accessing to database you have to bring up `kazoo_config`
 
 > **NOTE:** Don't forget to stop the `kazoo_config` and `kazoo_data_link_sup` after you test!
 
-All of the fixtures are in [core/kazoo_fixturedb/priv/dbs](../priv/dbs). In `dbs` directory each sub-directory is represent a database. For example `dbs/accounts` is represent `accounts` database. Inside these database directories, there are sub-directories to store the JSON document for this database (in `docs` dir) and CouchDB view result (in `views` dir):
+All of the fixtures are in [core/kazoo_fixturedb/priv/dbs](../priv/dbs). In `dbs` directory each sub-directory is represented a database. For example `dbs/accounts` is represented `accounts` database. Inside these database directories, there are sub-directories to store the JSON document for this database (in `docs` dir) and CouchDB view result (in `views` dir):
 
 ```shell
 $ tree core/kazoo_fixturedb/priv/dbs/
@@ -96,7 +96,7 @@ Documents are the exact copy of a real CouchDB documents. Document's filename is
 
 You can use `kz_fixturedb_util:get_doc_path/2,3` to get document's file path.
 
-Saving a document is not really saving the JObj in a file, instead it just returned an updated JObj with bumped `_rev` and updated `pvt_document_hash`. If database (the database folder) is not exists it returns error `{'error', 'not-found'}`. If you trying to save a document which exists in the `docs` without correct `_rev` then the result is `{'error', 'conflict'}` as expected.
+Saving a document is not really saving the JObj in a file, instead it just returned an updated JObj with bumped `_rev` and updated `pvt_document_hash`. If database (the database folder) does not exists it returns error `{'error', 'not_found'}`. If you try to save a document which exists in the `docs` without correct `_rev` then the result is `{'error', 'conflict'}` as expected.
 
 Delete document(s) is result in a bulk save in CouchBeam, so to mimic this behavior it returns a bulk save result:
 
@@ -138,7 +138,7 @@ doc_id, attachment_name, attachment_file_name
 
 When you're adding an attachment use `kz_fixturedb_util:get_att_path/3,4` to get the file path and save it there then use `kz_fixturedb_util:add_att_path_to_index/3,4` to add the attachment file name to the `attachment-index.csv` file.
 
-Putting an attachment is just returning the updated document JObj back. Deleting an attachment is returning tuple `{'ok', JObj}` whic JObj just have `id` and `rev`. Both put and delete will return error tuple if the JSON document file is not exists in database.
+Putting an attachment is just returning the updated document JObj back. Deleting an attachment is returning tuple `{'ok', JObj}` whic JObj just have `id` and `rev`. Both put and delete will return error tuple if the JSON document file does not exists in database.
 
 For large attachments like voicemail or a fax, use the files from `core/kazoo_fixturedb/priv/media_files` (or if it does not exists add one). And then soft link it in the destination database. For example in Unix shell if you're already at `code/kazoo_fixturedb` directory:
 
@@ -182,7 +182,7 @@ The list of view options which are result in creating a hashed file name are def
 
 #### Note about `include_docs`
 
-If `include_docs` is set, you don't need to include docs in your view result, `kz_fixturedb_view` will add the each document to the result set based on each result keys. So you can instead add the document in database `doc` directory.
+If `include_docs` is set, you don't need to include docs in your view result, `kz_fixturedb_view` will add each document to the result set based on each result keys. So you can instead add the document in database `doc` directory.
 
 #### Note about `limit` and `descending`
 

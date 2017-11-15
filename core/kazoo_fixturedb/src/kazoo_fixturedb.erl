@@ -146,7 +146,7 @@ save_doc(Server, DbName, Doc, Options) ->
 save_docs(Server, DbName, Docs, Options) ->
     kz_fixturedb_doc:save_docs(Server, DbName, Docs, Options).
 
--spec del_doc(server_map(), ne_binary(), kz_data:document(), kz_data:options()) -> doc_resp().
+-spec del_doc(server_map(), ne_binary(), kz_data:document(), kz_data:options()) -> docs_resp().
 del_doc(Server, DbName, Doc, Options) ->
     kz_fixturedb_doc:del_doc(Server, DbName, Doc, Options).
 
