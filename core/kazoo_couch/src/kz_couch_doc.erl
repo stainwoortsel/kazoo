@@ -83,7 +83,7 @@ ensure_saved(#server{}=Conn, DbName, Doc, Opts) ->
     do_ensure_saved(Db, Doc, Opts).
 
 -spec del_doc(server(), ne_binary(), kz_json:object(), kz_proplist()) ->
-                     {'ok', kz_json:objects()} |
+                     {'ok', kz_json:object()} |
                      couchbeam_error().
 del_doc(#server{}=Conn, DbName, Doc, Options) ->
     Db = get_db(Conn, DbName),
